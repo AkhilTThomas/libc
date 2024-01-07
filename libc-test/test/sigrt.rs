@@ -1,12 +1,12 @@
 //! Compare libc's SIGRTMAX and SIGRTMIN functions against the actual C macros
 
-extern crate libc;
-
 #[cfg(any(
     target_os = "linux",
     target_os = "l4re",
     target_os = "android",
-    target_os = "emscripten"
+    target_os = "emscripten",
+    target_os = "solaris",
+    target_os = "illumos",
 ))]
 mod t {
     use libc;

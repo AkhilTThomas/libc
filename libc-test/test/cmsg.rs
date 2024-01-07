@@ -1,13 +1,12 @@
 //! Compare libc's CMSG(3) family of functions against the actual C macros, for
 //! various inputs.
 
-extern crate libc;
-
 #[cfg(unix)]
 mod t {
 
-    use libc::{self, c_uchar, c_uint, c_void, cmsghdr, msghdr};
     use std::mem;
+
+    use libc::{self, c_uchar, c_uint, c_void, cmsghdr, msghdr};
 
     extern "C" {
         pub fn cmsg_firsthdr(msgh: *const msghdr) -> *mut cmsghdr;
