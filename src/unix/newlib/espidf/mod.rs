@@ -100,6 +100,16 @@ pub const SIGHUP: c_int = 1;
 pub const SIGQUIT: c_int = 3;
 pub const NSIG: size_t = 32;
 
+pub const SIGABRT: ::size_t = 1;
+pub const SIGFPE: ::size_t = 1;
+pub const SIGILL: ::size_t = 1;
+pub const SIGINT: ::size_t = 1;
+pub const SIGSEGV: ::size_t = 1;
+pub const SIGTERM: ::size_t = 1;
+pub const SIGHUP: ::size_t = 1;
+pub const SIGQUIT: ::size_t = 1;
+pub const NSIG: ::size_t = 2;
+
 extern "C" {
     pub fn pthread_create(
         native: *mut crate::pthread_t,
