@@ -132,6 +132,17 @@ s! {
         pub ipi6_ifindex: c_uint,
     }
 
+    pub struct in_pktinfo {
+        pub ipi_ifindex: ::c_uint,
+        pub ipi_spec_dst: ::in_addr,
+        pub ipi_addr: ::in_addr,
+    }
+
+    pub struct in6_pktinfo {
+        pub ipi6_addr: ::in6_addr,
+        pub ipi6_ifindex: ::c_uint,
+    }
+
     pub struct passwd {
         pub pw_name: *mut c_char,
         pub pw_passwd: *mut c_char,
