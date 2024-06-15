@@ -2589,6 +2589,9 @@ fn test_freebsd(target: &str) {
             // Added in FreeBSD 14.0
             "TCP_FUNCTION_ALIAS" if Some(14) > freebsd_ver => true,
 
+            // FIXME: The values has been changed in FreeBSD 15:
+            "CLOCK_BOOTTIME" if Some(15) <= freebsd_ver => true,
+
             _ => false,
         }
     });
