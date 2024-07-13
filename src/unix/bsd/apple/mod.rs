@@ -137,6 +137,11 @@ pub type os_clockid_t = u32;
 pub type os_sync_wait_on_address_flags_t = u32;
 pub type os_sync_wake_by_address_flags_t = u32;
 
+pub type os_clockid_t = u32;
+
+pub type os_sync_wait_on_address_flags_t = u32;
+pub type os_sync_wake_by_address_flags_t = u32;
+
 pub type os_unfair_lock = os_unfair_lock_s;
 pub type os_unfair_lock_t = *mut os_unfair_lock;
 
@@ -5853,6 +5858,40 @@ extern "C" {
         size: size_t,
         flags: os_sync_wake_by_address_flags_t,
     ) -> c_int;
+
+    // Available starting with macOS 14.4.
+    pub fn os_sync_wait_on_address(
+        addr: *mut ::c_void,
+        value: u64,
+        size: ::size_t,
+        flags: os_sync_wait_on_address_flags_t,
+    ) -> ::c_int;
+    pub fn os_sync_wait_on_address_with_deadline(
+        addr: *mut ::c_void,
+        value: u64,
+        size: ::size_t,
+        flags: os_sync_wait_on_address_flags_t,
+        clockid: os_clockid_t,
+        deadline: u64,
+    ) -> ::c_int;
+    pub fn os_sync_wait_on_address_with_timeout(
+        addr: *mut ::c_void,
+        value: u64,
+        size: ::size_t,
+        flags: os_sync_wait_on_address_flags_t,
+        clockid: os_clockid_t,
+        timeout_ns: u64,
+    ) -> ::c_int;
+    pub fn os_sync_wake_by_address_any(
+        addr: *mut ::c_void,
+        size: ::size_t,
+        flags: os_sync_wake_by_address_flags_t,
+    ) -> ::c_int;
+    pub fn os_sync_wake_by_address_all(
+        addr: *mut ::c_void,
+        size: ::size_t,
+        flags: os_sync_wake_by_address_flags_t,
+    ) -> ::c_int;
 
     pub fn os_unfair_lock_lock(lock: os_unfair_lock_t);
     pub fn os_unfair_lock_trylock(lock: os_unfair_lock_t) -> bool;
