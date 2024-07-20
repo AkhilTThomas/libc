@@ -603,6 +603,11 @@ pub const AT_SYSINFO: c_ulong = 32;
 pub const AT_SYSINFO_EHDR: c_ulong = 33;
 pub const AT_VECTOR_SIZE_ARCH: c_ulong = 3;
 
+// From NDK's asm/auxvec.h
+pub const AT_SYSINFO: ::c_ulong = 32;
+pub const AT_SYSINFO_EHDR: ::c_ulong = 33;
+pub const AT_VECTOR_SIZE_ARCH: ::c_ulong = 3;
+
 // socketcall values from linux/net.h (only the needed ones, and not public)
 const SYS_ACCEPT4: c_int = 18;
 
