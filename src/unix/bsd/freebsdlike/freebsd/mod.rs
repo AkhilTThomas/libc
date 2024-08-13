@@ -2541,6 +2541,52 @@ cfg_if! {
                     .finish()
             }
         }
+
+        impl PartialEq for kinfo_file {
+            fn eq(&self, other: &kinfo_file) -> bool {
+                self.kf_structsize == other.kf_structsize &&
+                    self.kf_type == other.kf_type &&
+                    self.kf_fd == other.kf_fd &&
+                    self.kf_ref_count == other.kf_ref_count &&
+                    self.kf_flags == other.kf_flags &&
+                    self.kf_offset == other.kf_offset &&
+                    self.kf_status == other.kf_status &&
+                    self.kf_cap_rights == other.kf_cap_rights &&
+                    self.kf_path
+                        .iter()
+                        .zip(other.kf_path.iter())
+                        .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for kinfo_file {}
+        impl ::fmt::Debug for kinfo_file {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("kinfo_file")
+                    .field("kf_structsize", &self.kf_structsize)
+                    .field("kf_type", &self.kf_type)
+                    .field("kf_fd", &self.kf_fd)
+                    .field("kf_ref_count", &self.kf_ref_count)
+                    .field("kf_flags", &self.kf_flags)
+                    .field("kf_offset", &self.kf_offset)
+                    .field("kf_status", &self.kf_status)
+                    .field("kf_cap_rights", &self.kf_cap_rights)
+                    .field("kf_path", &&self.kf_path[..])
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for kinfo_file {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.kf_structsize.hash(state);
+                self.kf_type.hash(state);
+                self.kf_fd.hash(state);
+                self.kf_ref_count.hash(state);
+                self.kf_flags.hash(state);
+                self.kf_offset.hash(state);
+                self.kf_status.hash(state);
+                self.kf_cap_rights.hash(state);
+                self.kf_path.hash(state);
+            }
+        }
     }
 }
 
