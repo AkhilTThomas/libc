@@ -338,6 +338,11 @@ pub const ATF_USETRAILERS: c_int = 0x10;
 pub const FNM_PERIOD: c_int = 1 << 2;
 pub const FNM_NOMATCH: c_int = 1;
 
+extern "C" {
+    pub static in6addr_loopback: in6_addr;
+    pub static in6addr_any: in6_addr;
+}
+
 cfg_if! {
     if #[cfg(any(target_os = "illumos", target_os = "solaris",))] {
         pub const FNM_CASEFOLD: c_int = 1 << 3;
