@@ -16,10 +16,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        target: [
-          i686-unknown-linux-gnu,
-          x86_64-unknown-linux-gnu,
-        ]
+        target:
+          - i686-unknown-linux-gnu
+          - x86_64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust toolchain
@@ -36,9 +35,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        target: [
-          x86_64-apple-darwin,
-        ]
+        target:
+          - x86_64-apple-darwin
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust toolchain
@@ -123,12 +121,11 @@ jobs:
           wasm32-unknown-emscripten,
           x86_64-linux-android,
           # FIXME: Exec format error (os error 8)
-          #x86_64-unknown-linux-gnux32,
-          x86_64-unknown-linux-musl,
+          # - x86_64-unknown-linux-gnux32
+          - x86_64-unknown-linux-musl
           # FIXME: It seems some items in `src/unix/mod.rs`
           # aren't defined on redox actually.
-          # x86_64-unknown-redox,
-        ]
+          # - x86_64-unknown-redox
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust toolchain
@@ -188,18 +185,17 @@ jobs:
       fail-fast: true
       max-parallel: 5
       matrix:
-        toolchain: [
-          stable,
-          beta,
-          nightly,
+        toolchain:
+          - stable
+          - beta
+          - nightly
           # FIXME: Disabled due to:
           # error: failed to parse registry's information for: serde
-          #1.13.0,
-          1.19.0,
-          1.24.0,
-          1.25.0,
-          1.30.0,
-        ]
+          # 1.13.0,
+          - 1.19.0
+          - 1.24.0
+          - 1.25.0
+          - 1.30.0
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust toolchain
@@ -242,13 +238,12 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        toolchain: [
-          1.19.0,
-          1.24.0,
-          1.25.0,
-          1.30.0,
-          stable,
-        ]
+        toolchain:
+          - 1.19.0
+          - 1.24.0
+          - 1.25.0
+          - 1.30.0
+          - stable
     steps:
       - uses: actions/checkout@v4
       - name: Self-update rustup
@@ -261,7 +256,6 @@ jobs:
   check_cfg:
     permissions:
       contents: read # to fetch code (actions/checkout)
-
     name: "Check #[cfg]s"
     runs-on: ubuntu-22.04
     steps:
