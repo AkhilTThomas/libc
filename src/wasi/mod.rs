@@ -873,3 +873,10 @@ cfg_if! {
         pub use self::p2::*;
     }
 }
+
+cfg_if! {
+    if #[cfg(target_env = "p2")] {
+        mod p2;
+        pub use self::p2::*;
+    }
+}
