@@ -255,6 +255,40 @@ s! {
         pub st_gen: u64,
         pub st_spare: [u64; 10],
     }
+
+    pub struct stat {
+        pub st_dev: ::dev_t,
+        pub st_ino: ::ino_t,
+        pub st_nlink: ::nlink_t,
+        pub st_mode: ::mode_t,
+        st_padding0: i16,
+        pub st_uid: ::uid_t,
+        pub st_gid: ::gid_t,
+        st_padding1: i32,
+        pub st_rdev: ::dev_t,
+        #[cfg(target_arch = "x86")]
+        st_atim_ext: i32,
+        pub st_atime: ::time_t,
+        pub st_atime_nsec: ::c_long,
+        #[cfg(target_arch = "x86")]
+        st_mtim_ext: i32,
+        pub st_mtime: ::time_t,
+        pub st_mtime_nsec: ::c_long,
+        #[cfg(target_arch = "x86")]
+        st_ctim_ext: i32,
+        pub st_ctime: ::time_t,
+        pub st_ctime_nsec: ::c_long,
+        #[cfg(target_arch = "x86")]
+        st_btim_ext: i32,
+        pub st_birthtime: ::time_t,
+        pub st_birthtime_nsec: ::c_long,
+        pub st_size: ::off_t,
+        pub st_blocks: ::blkcnt_t,
+        pub st_blksize: ::blksize_t,
+        pub st_flags: ::fflags_t,
+        pub st_gen: u64,
+        pub st_spare: [u64; 10],
+    }
 }
 
 s_no_extra_traits! {
