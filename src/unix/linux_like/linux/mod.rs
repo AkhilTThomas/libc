@@ -87,6 +87,15 @@ e! {
     }
 }
 
+e! {
+    #[repr(u32)]
+    pub enum tpacket_versions {
+        TPACKET_V1,
+        TPACKET_V2,
+        TPACKET_V3,
+    }
+}
+
 s! {
     pub struct glob_t {
         pub gl_pathc: size_t,
@@ -176,6 +185,15 @@ s! {
         #[cfg(target_endian = "big")]
         pub id: __u16,
         pub max_num_members: __u32,
+    }
+
+    pub struct fanout_args {
+        #[cfg(target_endian = "little")]
+        pub id: ::__u16,
+        pub type_flags: ::__u16,
+        #[cfg(target_endian = "big")]
+        pub id: ::__u16,
+        pub max_num_members: ::__u32,
     }
 
     pub struct packet_mreq {
@@ -293,6 +311,98 @@ s! {
         pub seq_num: crate::__u64,
         pub ts_first_pkt: crate::tpacket_bd_ts,
         pub ts_last_pkt: crate::tpacket_bd_ts,
+    }
+
+    pub struct sockaddr_pkt {
+        pub spkt_family: ::c_ushort,
+        pub spkt_device: [::c_uchar; 14],
+        pub spkt_protocol: ::c_ushort,
+    }
+
+    pub struct tpacket_auxdata {
+        pub tp_status: ::__u32,
+        pub tp_len: ::__u32,
+        pub tp_snaplen: ::__u32,
+        pub tp_mac: ::__u16,
+        pub tp_net: ::__u16,
+        pub tp_vlan_tci: ::__u16,
+        pub tp_vlan_tpid: ::__u16,
+    }
+
+    pub struct tpacket_hdr {
+        pub tp_status: ::c_ulong,
+        pub tp_len: ::c_uint,
+        pub tp_snaplen: ::c_uint,
+        pub tp_mac: ::c_ushort,
+        pub tp_net: ::c_ushort,
+        pub tp_sec: ::c_uint,
+        pub tp_usec: ::c_uint,
+    }
+
+    pub struct tpacket_hdr_variant1 {
+        pub tp_rxhash: ::__u32,
+        pub tp_vlan_tci: ::__u32,
+        pub tp_vlan_tpid: ::__u16,
+        pub tp_padding: ::__u16,
+    }
+
+    pub struct tpacket2_hdr {
+        pub tp_status: ::__u32,
+        pub tp_len: ::__u32,
+        pub tp_snaplen: ::__u32,
+        pub tp_mac: ::__u16,
+        pub tp_net: ::__u16,
+        pub tp_sec: ::__u32,
+        pub tp_nsec: ::__u32,
+        pub tp_vlan_tci: ::__u16,
+        pub tp_vlan_tpid: ::__u16,
+        pub tp_padding: [::__u8; 4],
+    }
+
+    pub struct tpacket_req {
+        pub tp_block_size: ::c_uint,
+        pub tp_block_nr: ::c_uint,
+        pub tp_frame_size: ::c_uint,
+        pub tp_frame_nr: ::c_uint,
+    }
+
+    pub struct tpacket_req3 {
+        pub tp_block_size: ::c_uint,
+        pub tp_block_nr: ::c_uint,
+        pub tp_frame_size: ::c_uint,
+        pub tp_frame_nr: ::c_uint,
+        pub tp_retire_blk_tov: ::c_uint,
+        pub tp_sizeof_priv: ::c_uint,
+        pub tp_feature_req_word: ::c_uint,
+    }
+
+    pub struct tpacket_stats {
+        pub tp_packets: ::c_uint,
+        pub tp_drops: ::c_uint,
+    }
+
+    pub struct tpacket_stats_v3 {
+        pub tp_packets: ::c_uint,
+        pub tp_drops: ::c_uint,
+        pub tp_freeze_q_cnt: ::c_uint,
+    }
+
+    pub struct tpacket3_hdr {
+        pub tp_next_offset: ::__u32,
+        pub tp_sec: ::__u32,
+        pub tp_nsec: ::__u32,
+        pub tp_snaplen: ::__u32,
+        pub tp_len: ::__u32,
+        pub tp_status: ::__u32,
+        pub tp_mac: ::__u16,
+        pub tp_net: ::__u16,
+        pub hv1: ::tpacket_hdr_variant1,
+        pub tp_padding: [::__u8; 8],
+    }
+
+    pub struct tpacket_bd_ts {
+        pub ts_sec: ::c_uint,
+        pub ts_usec: ::c_uint,
     }
 
     pub struct cpu_set_t {
@@ -3777,6 +3887,46 @@ pub const TPACKET2_HDRLEN: usize = ((size_of::<crate::tpacket2_hdr>() + TPACKET_
 pub const TPACKET3_HDRLEN: usize = ((size_of::<crate::tpacket3_hdr>() + TPACKET_ALIGNMENT - 1)
     & !(TPACKET_ALIGNMENT - 1))
     + size_of::<crate::sockaddr_ll>();
+
+pub const TP_STATUS_KERNEL: ::__u32 = 0;
+pub const TP_STATUS_USER: ::__u32 = 1 << 0;
+pub const TP_STATUS_COPY: ::__u32 = 1 << 1;
+pub const TP_STATUS_LOSING: ::__u32 = 1 << 2;
+pub const TP_STATUS_CSUMNOTREADY: ::__u32 = 1 << 3;
+pub const TP_STATUS_VLAN_VALID: ::__u32 = 1 << 4;
+pub const TP_STATUS_BLK_TMO: ::__u32 = 1 << 5;
+pub const TP_STATUS_VLAN_TPID_VALID: ::__u32 = 1 << 6;
+pub const TP_STATUS_CSUM_VALID: ::__u32 = 1 << 7;
+
+pub const TP_STATUS_AVAILABLE: ::__u32 = 0;
+pub const TP_STATUS_SEND_REQUEST: ::__u32 = 1 << 0;
+pub const TP_STATUS_SENDING: ::__u32 = 1 << 1;
+pub const TP_STATUS_WRONG_FORMAT: ::__u32 = 1 << 2;
+
+pub const TP_STATUS_TS_SOFTWARE: ::__u32 = 1 << 29;
+pub const TP_STATUS_TS_SYS_HARDWARE: ::__u32 = 1 << 30;
+pub const TP_STATUS_TS_RAW_HARDWARE: ::__u32 = 1 << 31;
+
+pub const TP_FT_REQ_FILL_RXHASH: ::__u32 = 1;
+
+pub const TPACKET_ALIGNMENT: usize = 16;
+
+cfg_if! {
+    if #[cfg(libc_const_size_of)] {
+        pub const TPACKET_HDRLEN: usize = (
+            (::mem::size_of::<::tpacket_hdr>() + TPACKET_ALIGNMENT - 1)
+            & !(TPACKET_ALIGNMENT - 1)
+        ) + ::mem::size_of::<::sockaddr_ll>();
+        pub const TPACKET2_HDRLEN: usize = (
+            (::mem::size_of::<::tpacket2_hdr>() + TPACKET_ALIGNMENT - 1)
+            & !(TPACKET_ALIGNMENT - 1)
+        ) + ::mem::size_of::<::sockaddr_ll>();
+        pub const TPACKET3_HDRLEN: usize = (
+            (::mem::size_of::<::tpacket3_hdr>() + TPACKET_ALIGNMENT - 1)
+            & !(TPACKET_ALIGNMENT - 1)
+        ) + ::mem::size_of::<::sockaddr_ll>();
+    }
+}
 
 // linux/netfilter.h
 pub const NF_DROP: c_int = 0;
