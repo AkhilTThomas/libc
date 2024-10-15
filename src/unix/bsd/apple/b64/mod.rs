@@ -61,6 +61,11 @@ s_no_extra_traits! {
         __sig: c_long,
         __opaque: [c_char; __PTHREAD_ONCE_SIZE__],
     }
+
+    pub struct pthread_once_t {
+        __sig: c_long,
+        __opaque: [::c_char; __PTHREAD_ONCE_SIZE__],
+    }
 }
 
 cfg_if! {
@@ -114,6 +119,29 @@ cfg_if! {
                 self.__opaque.hash(state);
             }
         }
+        impl PartialEq for pthread_once_t {
+            fn eq(&self, other: &pthread_once_t) -> bool {
+                self.__sig == other.__sig
+                    && self.__opaque
+                    .iter()
+                    .zip(other.__opaque.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for pthread_once_t {}
+        impl ::fmt::Debug for pthread_once_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_once_t")
+                    .field("__sig", &self.__sig)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for pthread_once_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.__sig.hash(state);
+                self.__opaque.hash(state);
+            }
+        }
     }
 }
 
@@ -138,6 +166,12 @@ pub const BIOCSETFNR: c_ulong = 0x8010427e;
 
 const _PTHREAD_ONCE_SIG_INIT: c_long = 0x30B1BCBA;
 pub const PTHREAD_ONCE_INIT: crate::pthread_once_t = crate::pthread_once_t {
+    __sig: _PTHREAD_ONCE_SIG_INIT,
+    __opaque: [0; 8],
+};
+
+const _PTHREAD_ONCE_SIG_INIT: c_long = 0x30B1BCBA;
+pub const PTHREAD_ONCE_INIT: ::pthread_once_t = ::pthread_once_t {
     __sig: _PTHREAD_ONCE_SIG_INIT,
     __opaque: [0; 8],
 };
