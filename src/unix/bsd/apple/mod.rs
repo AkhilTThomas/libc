@@ -6240,6 +6240,8 @@ extern "C" {
 
     pub fn mach_error_string(error_value: crate::mach_error_t) -> *mut c_char;
 
+    pub fn mach_error_string(error_value: ::mach_error_t) -> *mut ::c_char;
+
     // Added in macOS 10.13
     // ISO/IEC 9899:2011 ("ISO C11") K.3.7.4.1
     pub fn memset_s(s: *mut c_void, smax: size_t, c: c_int, n: size_t) -> c_int;
