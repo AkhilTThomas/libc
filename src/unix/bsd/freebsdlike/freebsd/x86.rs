@@ -47,7 +47,7 @@ s_no_extra_traits! {
 pub(crate) const _ALIGNBYTES: usize = mem::size_of::<c_long>() - 1;
 
 cfg_if! {
-    if #[cfg(feature = "extra_traits")] {
+    if #[cfg(all(libc_align, feature = "extra_traits"))] {
         impl PartialEq for mcontext_t {
             fn eq(&self, other: &mcontext_t) -> bool {
                 self.mc_onstack == other.mc_onstack
