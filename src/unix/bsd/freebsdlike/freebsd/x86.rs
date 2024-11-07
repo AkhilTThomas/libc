@@ -47,7 +47,7 @@ s_no_extra_traits! {
 pub(crate) const _ALIGNBYTES: usize = mem::size_of::<c_long>() - 1;
 
 cfg_if! {
-    if #[cfg(feature = "extra_traits")] {
+    if #[cfg(all(libc_align, feature = "extra_traits"))] {
         impl PartialEq for mcontext_t {
             fn eq(&self, other: &mcontext_t) -> bool {
                 self.mc_onstack == other.mc_onstack
@@ -118,7 +118,8 @@ cfg_if! {
                     .field("mc_fpformat", &self.mc_fpformat)
                     .field("mc_ownedfp", &self.mc_ownedfp)
                     .field("mc_flags", &self.mc_flags)
-                    .field("mc_fpstate", &self.mc_fpstate)
+                    // FIXME(msrv) debug not supported for arrays in old MSRV
+                    // .field("mc_fpstate", &self.mc_fpstate)
                     .field("mc_fsbase", &self.mc_fsbase)
                     .field("mc_gsbase", &self.mc_gsbase)
                     .field("mc_xfpustate", &self.mc_xfpustate)
