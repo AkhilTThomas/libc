@@ -1486,6 +1486,15 @@ cfg_if! {
             }
         }
     }
+
+    // #include <linux/eventpoll.h>
+
+    pub struct epoll_params {
+        pub busy_poll_usecs: u32,
+        pub busy_poll_budget: u16,
+        pub prefer_busy_poll: u8,
+        pub __pad: u8, // Must be zero
+    }
 }
 
 s_no_extra_traits! {

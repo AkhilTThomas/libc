@@ -4260,6 +4260,10 @@ fn test_linux(target: &str) {
             // FIXME: Requires >= 6.11 kernel headers.
             "MAP_DROPPABLE" => true,
 
+            // FIXME: Requires >= 6.9 kernel headers.
+            "EPIOCSPARAMS"
+            | "EPIOCGPARAMS" => true,
+
             _ => false,
         }
     });
