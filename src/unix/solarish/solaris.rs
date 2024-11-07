@@ -99,6 +99,21 @@ s_no_extra_traits! {
         pub ut_syslen: c_short,
         pub ut_host: [c_char; 257],
     }
+
+    pub struct utmpx {
+        pub ut_user: [::c_char; _UTMP_USER_LEN],
+        pub ut_id: [::c_char; _UTMP_ID_LEN],
+        pub ut_line: [::c_char; _UTMP_LINE_LEN],
+        pub ut_pid: ::pid_t,
+        pub ut_type: ::c_short,
+        pub ut_exit: exit_status,
+        pub ut_tv: ::timeval,
+        pub ut_session: ::c_int,
+        pub pad: [::c_int; 5],
+        pub ut_syslen: ::c_short,
+        pub ut_host: [::c_char; 257],
+    }
+
 }
 
 cfg_if! {
@@ -190,6 +205,28 @@ pub const PRIV_PROC_TPD_RESET: c_uint = 0x1000;
 pub const PRIV_TPD_KILLABLE: c_uint = 0x2000;
 
 pub const PRIV_USER: c_uint = PRIV_DEBUG
+    | PRIV_PROC_SENSITIVE
+    | NET_MAC_AWARE
+    | NET_MAC_AWARE_INHERIT
+    | PRIV_XPOLICY
+    | PRIV_AWARE_RESET
+    | PRIV_PFEXEC
+    | PRIV_PFEXEC_AUTH
+    | PRIV_PROC_TPD
+    | PRIV_TPD_UNSAFE
+    | PRIV_TPD_KILLABLE
+    | PRIV_PROC_TPD_RESET;
+
+pub const _PC_LAST: ::c_int = 102;
+
+pub const PRIV_PROC_SENSITIVE: ::c_uint = 0x0008;
+pub const PRIV_PFEXEC_AUTH: ::c_uint = 0x0200;
+pub const PRIV_PROC_TPD: ::c_uint = 0x0400;
+pub const PRIV_TPD_UNSAFE: ::c_uint = 0x0800;
+pub const PRIV_PROC_TPD_RESET: ::c_uint = 0x1000;
+pub const PRIV_TPD_KILLABLE: ::c_uint = 0x2000;
+
+pub const PRIV_USER: ::c_uint = PRIV_DEBUG
     | PRIV_PROC_SENSITIVE
     | NET_MAC_AWARE
     | NET_MAC_AWARE_INHERIT

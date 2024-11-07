@@ -1536,6 +1536,10 @@ cfg_if! {
         extern "C" {
             pub fn adjtime(delta: *mut timeval, olddelta: *mut timeval) -> c_int;
         }
+    } else if #[cfg(target_os = "solaris")] {
+        extern "C" {
+            pub fn adjtime(delta: *mut timeval, olddelta: *mut timeval) -> ::c_int;
+        }
     }
 }
 
@@ -1576,6 +1580,14 @@ cfg_if! {
     if #[cfg(not(target_os = "solaris"))] {
         extern "C" {
             pub fn flock(fd: c_int, operation: c_int) -> c_int;
+        }
+    }
+}
+
+cfg_if! {
+    if #[cfg(not(target_os = "solaris"))] {
+        extern "C" {
+            pub fn flock(fd: ::c_int, operation: ::c_int) -> ::c_int;
         }
     }
 }
