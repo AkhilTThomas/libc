@@ -1922,7 +1922,6 @@ eui64_ntohost
 eventfd_read
 eventfd_write
 exect
-execvpe
 execvP
 execvpe
 explicit_bzero
