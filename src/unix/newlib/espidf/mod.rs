@@ -122,6 +122,8 @@ extern "C" {
 
     pub fn gethostname(name: *mut c_char, namelen: ssize_t);
 
+    pub fn gethostname(name: *mut ::c_char, namelen: ::ssize_t);
+
     #[link_name = "lwip_sendmsg"]
     pub fn sendmsg(s: c_int, msg: *const crate::msghdr, flags: c_int) -> ssize_t;
     #[link_name = "lwip_recvmsg"]
