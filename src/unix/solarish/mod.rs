@@ -439,6 +439,11 @@ s! {
         pub aio_errno: c_int,
     }
 
+    pub struct aio_result_t {
+        pub aio_return: ::ssize_t,
+        pub aio_errno: ::c_int,
+    }
+
     pub struct exit_status {
         e_termination: c_short,
         e_exit: c_short,
