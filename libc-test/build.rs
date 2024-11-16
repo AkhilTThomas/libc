@@ -1056,6 +1056,9 @@ fn test_solarish(target: &str) {
             // const-ness issues
             "settimeofday" | "sethostname" => true,
 
+            // FIXME(1.0): https://github.com/rust-lang/libc/issues/1272
+            "fexecve" => true,
+
             // Solaris-different
             "getpwent_r" | "getgrent_r" | "updwtmpx" if is_illumos => true,
             "madvise" | "mprotect" if is_illumos => true,
