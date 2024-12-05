@@ -587,16 +587,14 @@ s! {
         pub sc_groups: [crate::gid_t; 1],
     }
 
+    pub struct ifreq_buffer {
+        pub length: ::size_t,
+        pub buffer: *mut ::c_void,
+    }
+
     pub struct bpf_program {
         pub bf_len: c_uint,
         pub bf_insns: *mut crate::bpf_insn,
-    }
-
-    pub struct bpf_stat {
-        pub bs_recv: u64,
-        pub bs_drop: u64,
-        pub bs_capt: u64,
-        bs_padding: [u64; 13],
     }
 
     pub struct bpf_version {
@@ -1148,6 +1146,7 @@ cfg_if! {
         }
     }
 }
+
 
 pub const _SYSNAME_SIZE: usize = 256 + 1;
 pub const RLIM_INFINITY: crate::rlim_t = 0xfffffffffffffffd;
@@ -3473,6 +3472,188 @@ impl siginfo_t {
     }
 }
 
+// Network related functions are provided by libsocket and regex
+// functions are provided by libregex.
+// In QNX <=7.0, libregex functions were included in libc itself.
+#[link(name = "socket")]
+#[cfg_attr(not(target_env = "nto70"), link(name = "regex"))]
+extern "C" {
+    pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_settime(clk_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
+    pub fn clock_getcpuclockid(pid: ::pid_t, clk_id: *mut ::clockid_t) -> ::c_int;
+
+    // sys/pthread.h
+    pub fn pthread_condattr_getclock(
+        attr: *const pthread_condattr_t,
+        clock_id: *mut clockid_t,
+    ) -> ::c_int;
+    pub fn pthread_condattr_setclock(
+        attr: *mut pthread_condattr_t,
+        clock_id: ::clockid_t,
+    ) -> ::c_int;
+    pub fn pthread_condattr_setpshared(attr: *mut pthread_condattr_t, pshared: ::c_int) -> ::c_int;
+    pub fn pthread_mutexattr_setpshared(
+        attr: *mut pthread_mutexattr_t,
+        pshared: ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_rwlockattr_getpshared(
+        attr: *const pthread_rwlockattr_t,
+        val: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_rwlockattr_setpshared(attr: *mut pthread_rwlockattr_t, val: ::c_int) -> ::c_int;
+    pub fn pthread_attr_getstack(
+        attr: *const ::pthread_attr_t,
+        stackaddr: *mut *mut ::c_void,
+        stacksize: *mut ::size_t,
+    ) -> ::c_int;
+    pub fn pthread_setschedprio(native: ::pthread_t, priority: ::c_int) -> ::c_int;
+    pub fn pthread_mutex_consistent(mutex: *mut pthread_mutex_t) -> ::c_int;
+    pub fn pthread_mutex_timedlock(
+        lock: *mut pthread_mutex_t,
+        abstime: *const ::timespec,
+    ) -> ::c_int;
+    pub fn pthread_spin_init(lock: *mut ::pthread_spinlock_t, pshared: ::c_int) -> ::c_int;
+    pub fn pthread_spin_destroy(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_spin_lock(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_spin_trylock(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_spin_unlock(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_barrierattr_init(__attr: *mut ::pthread_barrierattr_t) -> ::c_int;
+    pub fn pthread_barrierattr_destroy(__attr: *mut ::pthread_barrierattr_t) -> ::c_int;
+    pub fn pthread_barrierattr_getpshared(
+        __attr: *const ::pthread_barrierattr_t,
+        __pshared: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_barrierattr_setpshared(
+        __attr: *mut ::pthread_barrierattr_t,
+        __pshared: ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_barrier_init(
+        __barrier: *mut ::pthread_barrier_t,
+        __attr: *const ::pthread_barrierattr_t,
+        __count: ::c_uint,
+    ) -> ::c_int;
+    pub fn pthread_barrier_destroy(__barrier: *mut ::pthread_barrier_t) -> ::c_int;
+    pub fn pthread_barrier_wait(__barrier: *mut ::pthread_barrier_t) -> ::c_int;
+    pub fn pthread_attr_getguardsize(
+        attr: *const ::pthread_attr_t,
+        guardsize: *mut ::size_t,
+    ) -> ::c_int;
+    pub fn pthread_attr_setguardsize(attr: *mut ::pthread_attr_t, guardsize: ::size_t) -> ::c_int;
+    pub fn pthread_condattr_getpshared(
+        attr: *const pthread_condattr_t,
+        pshared: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_setschedparam(
+        native: ::pthread_t,
+        policy: ::c_int,
+        param: *const ::sched_param,
+    ) -> ::c_int;
+    pub fn pthread_cancel(thread: ::pthread_t) -> ::c_int;
+    pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
+    pub fn pthread_sigmask(how: ::c_int, set: *const sigset_t, oldset: *mut sigset_t) -> ::c_int;
+    pub fn pthread_atfork(
+        prepare: ::Option<unsafe extern "C" fn()>,
+        parent: ::Option<unsafe extern "C" fn()>,
+        child: ::Option<unsafe extern "C" fn()>,
+    ) -> ::c_int;
+    pub fn pthread_mutexattr_getpshared(
+        attr: *const pthread_mutexattr_t,
+        pshared: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_mutexattr_getrobust(
+        attr: *const pthread_mutexattr_t,
+        robustness: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_mutexattr_setrobust(
+        attr: *mut pthread_mutexattr_t,
+        robustness: ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_create(
+        native: *mut ::pthread_t,
+        attr: *const ::pthread_attr_t,
+        f: extern "C" fn(*mut ::c_void) -> *mut ::c_void,
+        value: *mut ::c_void,
+    ) -> ::c_int;
+    pub fn pthread_getcpuclockid(thread: ::pthread_t, clk_id: *mut ::clockid_t) -> ::c_int;
+    pub fn pthread_getname_np(thread: ::pthread_t, name: *mut ::c_char, len: ::c_int) -> ::c_int;
+    pub fn pthread_setname_np(thread: ::pthread_t, name: *const ::c_char) -> ::c_int;
+    pub fn pthread_getschedparam(
+        native: ::pthread_t,
+        policy: *mut ::c_int,
+        param: *mut ::sched_param,
+    ) -> ::c_int;
+
+    // sys/wait.h
+    pub fn waitid(idtype: idtype_t, id: id_t, infop: *mut ::siginfo_t, options: ::c_int)
+    -> ::c_int;
+    pub fn wait4(
+        pid: ::pid_t,
+        status: *mut ::c_int,
+        options: ::c_int,
+        rusage: *mut ::rusage,
+    ) -> ::pid_t;
+
+    // unix.h
+    pub fn openpty(
+        amaster: *mut ::c_int,
+        aslave: *mut ::c_int,
+        name: *mut ::c_char,
+        termp: *mut termios,
+        winp: *mut ::winsize,
+    ) -> ::c_int;
+    pub fn forkpty(
+        amaster: *mut ::c_int,
+        name: *mut ::c_char,
+        termp: *mut termios,
+        winp: *mut ::winsize,
+    ) -> ::pid_t;
+    pub fn login_tty(fd: ::c_int) -> ::c_int;
+
+    // string.h
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
+
+    // pwd.h
+    pub fn setpwent();
+    pub fn endpwent();
+    pub fn getpwent() -> *mut passwd;
+    pub fn getpwnam_r(
+        name: *const ::c_char,
+        pwd: *mut passwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut passwd,
+    ) -> ::c_int;
+    pub fn getpwuid_r(
+        uid: ::uid_t,
+        pwd: *mut passwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut passwd,
+    ) -> ::c_int;
+
+    //termios.h
+    pub fn cfmakeraw(termios: *mut ::termios) -> ::c_int;
+}
+
+cfg_if! {
+    if #[cfg(target_env = "nto80")]{
+        mod nto80;
+        pub use self::nto80::*;
+    }
+    else if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+        mod nto7071;
+        pub use self::nto7071::*;
+    }
+    else {
+        // Unknown env
+    }
+}
+
+
+mod neutrino;
+pub use self::neutrino::*;
+
 cfg_if! {
     if #[cfg(target_arch = "x86_64")] {
         mod x86_64;
@@ -3484,6 +3665,3 @@ cfg_if! {
         panic!("Unsupported arch");
     }
 }
-
-mod neutrino;
-pub use self::neutrino::*;

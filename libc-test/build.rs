@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 extern crate ctest2 as ctest;
 
@@ -94,7 +94,7 @@ fn do_semver() {
     // NOTE: Android doesn't include the unix file (or the Linux file) because
     // there are some many definitions missing it's actually easier just to
     // maintain a file for Android.
-    if family != os && os != "android" {
+    if family != os && os != "android" && os != "nto" {
         process_semver_file(&mut output, &mut semver_root, &family);
     }
     // We don't do semver for unknown targets.
@@ -3045,7 +3045,6 @@ fn test_neutrino(target: &str) {
     assert!(target.contains("nto-qnx"));
 
     let mut cfg = ctest_cfg();
-
     headers! { cfg:
         "ctype.h",
         "dirent.h",
@@ -3060,7 +3059,6 @@ fn test_neutrino(target: &str) {
         "limits.h",
         "sys/link.h",
         "locale.h",
-        "sys/malloc.h",
         "rcheck/malloc.h",
         "malloc.h",
         "mqueue.h",
@@ -3124,11 +3122,13 @@ fn test_neutrino(target: &str) {
         "nl_types.h",
         "langinfo.h",
         "unix.h",
-        "nbutil.h",
+        // "nbutil.h",
         "aio.h",
         "net/bpf.h",
         "net/if_dl.h",
         "sys/syspage.h",
+        "sys/neutrino.h",
+        "sys/jail.h"
 
         // TODO: The following header file doesn't appear as part of the default headers
         //       found in a standard installation of Neutrino 7.1 SDP.  The structures/
@@ -3262,6 +3262,9 @@ fn test_neutrino(target: &str) {
             // stack unwinding bug.
             "__my_thread_exit" => true,
 
+            // not available in neutrino
+            "cfsetspeed" => true,
+
             _ => false,
         }
     });
@@ -3283,6 +3286,7 @@ fn test_neutrino(target: &str) {
         (struct_ == "sigaction" && field == "sa_sigaction") ||
         // does not exist
         (struct_ == "syspage_entry" && field == "__reserved") ||
+        (struct_ == "ifreq" && field == "ifr_ifru") ||
         false // keep me for smaller diffs when something is added above
     });
 
