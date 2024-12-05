@@ -1,16 +1,19 @@
+// use qtime_entry;
+// use syspage_entry;
+cfg_if! {
+    if #[cfg(target_env = "nto80")]{
+        use super::nto80::*;
+    }
+    else if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+        use super::nto7071::*;
+    }
+    else {
+        // Unknown env
+    }
+}
 pub type nto_job_t = ::sync_t;
 
 s! {
-    pub struct syspage_entry_info {
-        pub entry_off: u16,
-        pub entry_size: u16,
-    }
-    pub struct syspage_array_info {
-        entry_off: u16,
-        entry_size: u16,
-        element_size: u16,
-    }
-
     pub struct intrspin {
         pub value: ::c_uint, // volatile
     }
@@ -165,27 +168,6 @@ s! {
         pub tick_nsec_inc: i32,
     }
 
-    pub struct qtime_entry {
-        pub cycles_per_sec: u64,
-        pub nsec_tod_adjust: u64, // volatile
-        pub nsec: u64,            // volatile
-        pub nsec_inc: u32,
-        pub boot_time: u32,
-        pub adjust: _clockadjust,
-        pub timer_rate: u32,
-        pub timer_scale: i32,
-        pub timer_load: u32,
-        pub intr: i32,
-        pub epoch: u32,
-        pub flags: u32,
-        pub rr_interval_mul: u32,
-        pub timer_load_hi: u32,
-        pub nsec_stable: u64,      // volatile
-        pub timer_load_max: u64,
-        pub timer_prog_time: u32,
-        spare: [u32; 7],
-    }
-
     pub struct _sched_info {
         pub priority_min: ::c_int,
         pub priority_max: ::c_int,
@@ -211,66 +193,10 @@ s! {
     }
 }
 
-s_no_extra_traits! {
-
-    #[repr(align(8))]
-    pub struct syspage_entry {
-        pub size: u16,
-        pub total_size: u16,
-        pub type_: u16,
-        pub num_cpu: u16,
-        pub system_private: syspage_entry_info,
-        pub old_asinfo: syspage_entry_info,
-        pub __mangle_name_to_cause_compilation_errs_meminfo: syspage_entry_info,
-        pub hwinfo: syspage_entry_info,
-        pub old_cpuinfo: syspage_entry_info,
-        pub old_cacheattr: syspage_entry_info,
-        pub qtime: syspage_entry_info,
-        pub callout: syspage_entry_info,
-        pub callin: syspage_entry_info,
-        pub typed_strings: syspage_entry_info,
-        pub strings: syspage_entry_info,
-        pub old_intrinfo: syspage_entry_info,
-        pub smp: syspage_entry_info,
-        pub pminfo: syspage_entry_info,
-        pub old_mdriver: syspage_entry_info,
-        spare0: [u32; 1],
-        __reserved: [u8; 160], // anonymous union with architecture dependent structs
-        pub new_asinfo: syspage_array_info,
-        pub new_cpuinfo: syspage_array_info,
-        pub new_cacheattr: syspage_array_info,
-        pub new_intrinfo: syspage_array_info,
-        pub new_mdriver: syspage_array_info,
-    }
-}
-
 pub const SYSMGR_PID: u32 = 1;
 pub const SYSMGR_CHID: u32 = 1;
 pub const SYSMGR_COID: u32 = _NTO_SIDE_CHANNEL;
 pub const SYSMGR_HANDLE: u32 = 0;
-
-pub const STATE_DEAD: ::c_int = 0x00;
-pub const STATE_RUNNING: ::c_int = 0x01;
-pub const STATE_READY: ::c_int = 0x02;
-pub const STATE_STOPPED: ::c_int = 0x03;
-pub const STATE_SEND: ::c_int = 0x04;
-pub const STATE_RECEIVE: ::c_int = 0x05;
-pub const STATE_REPLY: ::c_int = 0x06;
-pub const STATE_STACK: ::c_int = 0x07;
-pub const STATE_WAITTHREAD: ::c_int = 0x08;
-pub const STATE_WAITPAGE: ::c_int = 0x09;
-pub const STATE_SIGSUSPEND: ::c_int = 0x0a;
-pub const STATE_SIGWAITINFO: ::c_int = 0x0b;
-pub const STATE_NANOSLEEP: ::c_int = 0x0c;
-pub const STATE_MUTEX: ::c_int = 0x0d;
-pub const STATE_CONDVAR: ::c_int = 0x0e;
-pub const STATE_JOIN: ::c_int = 0x0f;
-pub const STATE_INTR: ::c_int = 0x10;
-pub const STATE_SEM: ::c_int = 0x11;
-pub const STATE_WAITCTX: ::c_int = 0x12;
-pub const STATE_NET_SEND: ::c_int = 0x13;
-pub const STATE_NET_REPLY: ::c_int = 0x14;
-pub const STATE_MAX: ::c_int = 0x18;
 
 pub const _NTO_TIMEOUT_RECEIVE: i32 = 1 << STATE_RECEIVE;
 pub const _NTO_TIMEOUT_SEND: i32 = 1 << STATE_SEND;
@@ -290,21 +216,27 @@ pub const _NTO_MI_UNBLOCK_REQ: u32 = 256;
 pub const _NTO_MI_NET_CRED_DIRTY: u32 = 512;
 pub const _NTO_MI_CONSTRAINED: u32 = 1024;
 pub const _NTO_MI_CHROOT: u32 = 2048;
-pub const _NTO_MI_BITS_64: u32 = 4096;
 pub const _NTO_MI_BITS_DIFF: u32 = 8192;
 pub const _NTO_MI_SANDBOX: u32 = 16384;
 
-pub const _NTO_CI_ENDIAN_BIG: u32 = 1;
-pub const _NTO_CI_BKGND_PGRP: u32 = 4;
-pub const _NTO_CI_ORPHAN_PGRP: u32 = 8;
-pub const _NTO_CI_STOPPED: u32 = 128;
-pub const _NTO_CI_UNABLE: u32 = 256;
-pub const _NTO_CI_TYPE_ID: u32 = 512;
-pub const _NTO_CI_CHROOT: u32 = 2048;
-pub const _NTO_CI_BITS_64: u32 = 4096;
-pub const _NTO_CI_SANDBOX: u32 = 16384;
-pub const _NTO_CI_LOADER: u32 = 32768;
-pub const _NTO_CI_FULL_GROUPS: u32 = 2147483648;
+pub const _NTO_CI_ENDIAN_BIG: u32 = 0x00000001;
+pub const _NTO_CI_BKGND_PGRP: u32 = 0x00000004;
+pub const _NTO_CI_ORPHAN_PGRP: u32 = 0x00000008;
+pub const _NTO_CI_STOPPED: u32 = 0x00000080;
+pub const _NTO_CI_UNABLE: u32 = 0x00000100;
+pub const _NTO_CI_TYPE_ID: u32 = 0x00000200;
+pub const _NTO_CI_CHROOT: u32 = 0x00000800;
+cfg_if! {
+    if #[cfg(target_env = "nto80")] {
+        pub const _NTO_CI_SANDBOX: u32 = 0x00004000;
+        pub const _NTO_CI_GROUPS_INFO_ONLY: u32 = 0x40000000;
+    }
+    else {
+        pub const _NTO_MI_BITS_64: u32 = 0x00001000;
+    }
+}
+pub const _NTO_CI_LOADER: u32 = 0x00008000;
+pub const _NTO_CI_FULL_GROUPS: u32 = 0x80000000;
 
 pub const _NTO_TI_ACTIVE: u32 = 1;
 pub const _NTO_TI_ABSOLUTE: u32 = 2;
@@ -345,7 +277,22 @@ pub const _NTO_PF_TERMING: u32 = 4;
 pub const _NTO_PF_ZOMBIE: u32 = 8;
 pub const _NTO_PF_NOZOMBIE: u32 = 16;
 pub const _NTO_PF_FORKED: u32 = 32;
-pub const _NTO_PF_ORPHAN_PGRP: u32 = 64;
+cfg_if! {
+    if #[cfg(target_env = "nto80")] {
+        pub const _NTO_PF_SPAWN_HELD: u32 = 0x00004000;
+        pub const _NTO_PF_KILL_REQUEST: u32 = 524288;
+        pub const _NTO_PF_CORE_REQUEST: u32 = 0x00200000;
+        pub const _NTO_PF_COREDUMP_WAIT: u32 = 268435456;
+
+    }
+    else {
+        pub const _NTO_PF_ORPHAN_PGRP: u32 = 64;
+        pub const _NTO_PF_RING0: u32 = 32768;
+        pub const _NTO_PF_DESTROYALL: u32 = 524288;
+        pub const _NTO_PF_TERM_WAITING: u32 = 8388608;
+        pub const _NTO_PF_NET: u32 = 268435456;
+    }
+}
 pub const _NTO_PF_STOPPED: u32 = 128;
 pub const _NTO_PF_DEBUG_STOPPED: u32 = 256;
 pub const _NTO_PF_BKGND_PGRP: u32 = 512;
@@ -353,34 +300,17 @@ pub const _NTO_PF_NOISYNC: u32 = 1024;
 pub const _NTO_PF_CONTINUED: u32 = 2048;
 pub const _NTO_PF_CHECK_INTR: u32 = 4096;
 pub const _NTO_PF_COREDUMP: u32 = 8192;
-pub const _NTO_PF_RING0: u32 = 32768;
 pub const _NTO_PF_SLEADER: u32 = 65536;
 pub const _NTO_PF_WAITINFO: u32 = 131072;
-pub const _NTO_PF_DESTROYALL: u32 = 524288;
 pub const _NTO_PF_NOCOREDUMP: u32 = 1048576;
 pub const _NTO_PF_WAITDONE: u32 = 4194304;
-pub const _NTO_PF_TERM_WAITING: u32 = 8388608;
 pub const _NTO_PF_ASLR: u32 = 16777216;
 pub const _NTO_PF_EXECED: u32 = 33554432;
 pub const _NTO_PF_APP_STOPPED: u32 = 67108864;
 pub const _NTO_PF_64BIT: u32 = 134217728;
-pub const _NTO_PF_NET: u32 = 268435456;
 pub const _NTO_PF_NOLAZYSTACK: u32 = 536870912;
 pub const _NTO_PF_NOEXEC_STACK: u32 = 1073741824;
 pub const _NTO_PF_LOADER_PERMS: u32 = 2147483648;
-
-pub const _NTO_TF_INTR_PENDING: u32 = 65536;
-pub const _NTO_TF_DETACHED: u32 = 131072;
-pub const _NTO_TF_SHR_MUTEX: u32 = 262144;
-pub const _NTO_TF_SHR_MUTEX_EUID: u32 = 524288;
-pub const _NTO_TF_THREADS_HOLD: u32 = 1048576;
-pub const _NTO_TF_UNBLOCK_REQ: u32 = 4194304;
-pub const _NTO_TF_ALIGN_FAULT: u32 = 16777216;
-pub const _NTO_TF_SSTEP: u32 = 33554432;
-pub const _NTO_TF_ALLOCED_STACK: u32 = 67108864;
-pub const _NTO_TF_NOMULTISIG: u32 = 134217728;
-pub const _NTO_TF_LOW_LATENCY: u32 = 268435456;
-pub const _NTO_TF_IOPRIV: u32 = 2147483648;
 
 pub const _NTO_TCTL_IO_PRIV: u32 = 1;
 pub const _NTO_TCTL_THREADS_HOLD: u32 = 2;
@@ -388,16 +318,25 @@ pub const _NTO_TCTL_THREADS_CONT: u32 = 3;
 pub const _NTO_TCTL_RUNMASK: u32 = 4;
 pub const _NTO_TCTL_ALIGN_FAULT: u32 = 5;
 pub const _NTO_TCTL_RUNMASK_GET_AND_SET: u32 = 6;
-pub const _NTO_TCTL_PERFCOUNT: u32 = 7;
+cfg_if! {
+    if #[cfg(target_env = "nto80")] {
+        pub const _NTO_TCTL_SIGSTACK: u32 =   23;
+        pub const _NTO_TCTL_TLS_SET_TP: u32 = 24;
+        pub const _NTO_TCTL_HYP_VCPU: u32 =   25;
+    }
+    else {
+        pub const _NTO_TCTL_PERFCOUNT: u32 = 7;
+        pub const _NTO_TCTL_SHR_MUTEX: u32 = 13;
+        pub const _NTO_TCTL_NET_KIF_GET_AND_SET: u32 = 15;
+        pub const _NTO_TCTL_LOW_LATENCY: u32 = 16;
+    }
+}
 pub const _NTO_TCTL_ONE_THREAD_HOLD: u32 = 8;
 pub const _NTO_TCTL_ONE_THREAD_CONT: u32 = 9;
 pub const _NTO_TCTL_RUNMASK_GET_AND_SET_INHERIT: u32 = 10;
 pub const _NTO_TCTL_NAME: u32 = 11;
 pub const _NTO_TCTL_RCM_GET_AND_SET: u32 = 12;
-pub const _NTO_TCTL_SHR_MUTEX: u32 = 13;
 pub const _NTO_TCTL_IO: u32 = 14;
-pub const _NTO_TCTL_NET_KIF_GET_AND_SET: u32 = 15;
-pub const _NTO_TCTL_LOW_LATENCY: u32 = 16;
 pub const _NTO_TCTL_ADD_EXIT_EVENT: u32 = 17;
 pub const _NTO_TCTL_DEL_EXIT_EVENT: u32 = 18;
 pub const _NTO_TCTL_IO_LEVEL: u32 = 19;
@@ -418,8 +357,12 @@ pub const _NTO_CHF_SENDER_LEN: u32 = 32;
 pub const _NTO_CHF_COID_DISCONNECT: u32 = 64;
 pub const _NTO_CHF_REPLY_LEN: u32 = 128;
 pub const _NTO_CHF_PULSE_POOL: u32 = 256;
-pub const _NTO_CHF_ASYNC_NONBLOCK: u32 = 512;
-pub const _NTO_CHF_ASYNC: u32 = 1024;
+cfg_if! {
+    if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+        pub const _NTO_CHF_ASYNC_NONBLOCK: u32 = 512;
+        pub const _NTO_CHF_ASYNC: u32 = 1024;
+    }
+}
 pub const _NTO_CHF_GLOBAL: u32 = 2048;
 pub const _NTO_CHF_PRIVATE: u32 = 4096;
 pub const _NTO_CHF_MSG_PAUSING: u32 = 8192;
@@ -430,8 +373,21 @@ pub const _NTO_CHO_CUSTOM_EVENT: u32 = 1;
 
 pub const _NTO_COF_CLOEXEC: u32 = 1;
 pub const _NTO_COF_DEAD: u32 = 2;
+cfg_if! {
+    if #[cfg(target_env = "nto80")]{
+        pub const _NTO_COF_NOINHERIT: u32 = 4;
+        pub const _NTO_COF_LOCAL: u32 = 8;
+        pub const _NTO_COF_ALLOWED: u32 = 128;
+        pub const _NTO_COF_DUP2: u32 = 0x8000;
+    }
+    else if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+        pub const _NTO_COF_NETCON: u32 = 128;
+    }
+    else {
+        //unknown env
+    }
+}
 pub const _NTO_COF_NOSHARE: u32 = 64;
-pub const _NTO_COF_NETCON: u32 = 128;
 pub const _NTO_COF_NONBLOCK: u32 = 256;
 pub const _NTO_COF_ASYNC: u32 = 512;
 pub const _NTO_COF_GLOBAL: u32 = 1024;
@@ -446,9 +402,21 @@ pub const _NTO_SIDE_CHANNEL: u32 = 1073741824;
 pub const _NTO_CONNECTION_SCOID: u32 = 65536;
 pub const _NTO_GLOBAL_CHANNEL: u32 = 1073741824;
 
-pub const _NTO_TIMEOUT_MASK: u32 = (1 << STATE_MAX) - 1;
-pub const _NTO_TIMEOUT_ACTIVE: u32 = 1 << STATE_MAX;
-pub const _NTO_TIMEOUT_IMMEDIATE: u32 = 1 << (STATE_MAX + 1);
+cfg_if! {
+    if #[cfg(target_env = "nto80")]{
+        pub const _NTO_TIMEOUT_MASK: ::c_uint = (1 << STATE_TIMEOUT_MAX) - 1;
+        pub const _NTO_TIMEOUT_ACTIVE: ::c_uint = 1 << STATE_TIMEOUT_MAX;
+        pub const _NTO_TIMEOUT_NO_WAIT: ::c_uint = 1 << (STATE_TIMEOUT_MAX + 1);
+    }
+    else if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+        pub const _NTO_TIMEOUT_MASK: ::u32 = (1 << STATE_MAX) - 1;
+        pub const _NTO_TIMEOUT_ACTIVE: u32 = 1 << STATE_MAX;
+        pub const _NTO_TIMEOUT_IMMEDIATE: u32 = 1 << (STATE_MAX + 1);
+    }
+    else {
+        // Unknown env
+    }
+}
 
 pub const _NTO_IC_LATENCY: u32 = 0;
 
@@ -483,19 +451,36 @@ pub const _NTO_IH_RESP_SUGGEST_OFFLINE: u32 = 256;
 pub const _NTO_IH_RESP_SLEEP_MODE_REACHED: u32 = 512;
 pub const _NTO_IH_RESP_DELIVER_INTRS: u32 = 1024;
 
-pub const _NTO_READIOV_SEND: u32 = 0;
-pub const _NTO_READIOV_REPLY: u32 = 1;
+cfg_if! {
+   if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+    pub const _NTO_KEYDATA_VTID: u32 = 2147483648;
+    pub const _NTO_KEYDATA_PATHSIGN: u32 = 32768;
+    pub const _NTO_KEYDATA_OP_MASK: u32 = 255;
+    pub const _NTO_KEYDATA_VERIFY: u32 = 0;
+    pub const _NTO_KEYDATA_CALCULATE: u32 = 1;
+    pub const _NTO_KEYDATA_CALCULATE_REUSE: u32 = 2;
+    pub const _NTO_KEYDATA_PATHSIGN_VERIFY: u32 = 32768;
+    pub const _NTO_KEYDATA_PATHSIGN_CALCULATE: u32 = 32769;
+    pub const _NTO_KEYDATA_PATHSIGN_CALCULATE_REUSE: u32 = 32770;
+    
+    pub const _NTO_TF_INTR_PENDING: u32 = 65536;
+    pub const _NTO_TF_DETACHED: u32 = 131072;
+    pub const _NTO_TF_SHR_MUTEX: u32 = 262144;
+    pub const _NTO_TF_SHR_MUTEX_EUID: u32 = 524288;
+    pub const _NTO_TF_THREADS_HOLD: u32 = 1048576;
+    pub const _NTO_TF_UNBLOCK_REQ: u32 = 4194304;
+    pub const _NTO_TF_ALIGN_FAULT: u32 = 16777216;
+    pub const _NTO_TF_SSTEP: u32 = 33554432;
+    pub const _NTO_TF_ALLOCED_STACK: u32 = 67108864;
+    pub const _NTO_TF_NOMULTISIG: u32 = 134217728;
+    pub const _NTO_TF_LOW_LATENCY: u32 = 268435456;
+    pub const _NTO_TF_IOPRIV: u32 = 2147483648;
 
-pub const _NTO_KEYDATA_VTID: u32 = 2147483648;
+    pub const _NTO_READIOV_SEND: u32 = 0;
+    pub const _NTO_READIOV_REPLY: u32 = 1;
+    }
+}
 
-pub const _NTO_KEYDATA_PATHSIGN: u32 = 32768;
-pub const _NTO_KEYDATA_OP_MASK: u32 = 255;
-pub const _NTO_KEYDATA_VERIFY: u32 = 0;
-pub const _NTO_KEYDATA_CALCULATE: u32 = 1;
-pub const _NTO_KEYDATA_CALCULATE_REUSE: u32 = 2;
-pub const _NTO_KEYDATA_PATHSIGN_VERIFY: u32 = 32768;
-pub const _NTO_KEYDATA_PATHSIGN_CALCULATE: u32 = 32769;
-pub const _NTO_KEYDATA_PATHSIGN_CALCULATE_REUSE: u32 = 32770;
 
 pub const _NTO_SCTL_SETPRIOCEILING: u32 = 1;
 pub const _NTO_SCTL_GETPRIOCEILING: u32 = 2;
@@ -513,14 +498,6 @@ extern "C" {
     pub fn ChannelCreatePulsePool(
         __flags: ::c_uint,
         __config: *const nto_channel_config,
-    ) -> ::c_int;
-    pub fn ChannelCreateExt(
-        __flags: ::c_uint,
-        __mode: ::mode_t,
-        __bufsize: usize,
-        __maxnumbuf: ::c_uint,
-        __ev: *const ::sigevent,
-        __cred: *mut _cred_info,
     ) -> ::c_int;
     pub fn ChannelDestroy(__chid: ::c_int) -> ::c_int;
     pub fn ChannelDestroy_r(__chid: ::c_int) -> ::c_int;
@@ -727,30 +704,7 @@ extern "C" {
         __riov: *const ::iovec,
         __rparts: usize,
     ) -> ::c_long;
-    pub fn MsgReceive(
-        __chid: ::c_int,
-        __msg: *mut ::c_void,
-        __bytes: usize,
-        __info: *mut _msg_info64,
-    ) -> ::c_int;
-    pub fn MsgReceive_r(
-        __chid: ::c_int,
-        __msg: *mut ::c_void,
-        __bytes: usize,
-        __info: *mut _msg_info64,
-    ) -> ::c_int;
-    pub fn MsgReceivev(
-        __chid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __info: *mut _msg_info64,
-    ) -> ::c_int;
-    pub fn MsgReceivev_r(
-        __chid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __info: *mut _msg_info64,
-    ) -> ::c_int;
+    
     pub fn MsgReceivePulse(
         __chid: ::c_int,
         __pulse: *mut ::c_void,
@@ -762,116 +716,6 @@ extern "C" {
         __pulse: *mut ::c_void,
         __bytes: usize,
         __info: *mut _msg_info64,
-    ) -> ::c_int;
-    pub fn MsgReceivePulsev(
-        __chid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __info: *mut _msg_info64,
-    ) -> ::c_int;
-    pub fn MsgReceivePulsev_r(
-        __chid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __info: *mut _msg_info64,
-    ) -> ::c_int;
-    pub fn MsgReply(
-        __rcvid: ::c_int,
-        __status: ::c_long,
-        __msg: *const ::c_void,
-        __bytes: usize,
-    ) -> ::c_int;
-    pub fn MsgReply_r(
-        __rcvid: ::c_int,
-        __status: ::c_long,
-        __msg: *const ::c_void,
-        __bytes: usize,
-    ) -> ::c_int;
-    pub fn MsgReplyv(
-        __rcvid: ::c_int,
-        __status: ::c_long,
-        __iov: *const ::iovec,
-        __parts: usize,
-    ) -> ::c_int;
-    pub fn MsgReplyv_r(
-        __rcvid: ::c_int,
-        __status: ::c_long,
-        __iov: *const ::iovec,
-        __parts: usize,
-    ) -> ::c_int;
-    pub fn MsgReadiov(
-        __rcvid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __offset: usize,
-        __flags: ::c_int,
-    ) -> isize;
-    pub fn MsgReadiov_r(
-        __rcvid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __offset: usize,
-        __flags: ::c_int,
-    ) -> isize;
-    pub fn MsgRead(
-        __rcvid: ::c_int,
-        __msg: *mut ::c_void,
-        __bytes: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgRead_r(
-        __rcvid: ::c_int,
-        __msg: *mut ::c_void,
-        __bytes: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgReadv(
-        __rcvid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgReadv_r(
-        __rcvid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgWrite(
-        __rcvid: ::c_int,
-        __msg: *const ::c_void,
-        __bytes: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgWrite_r(
-        __rcvid: ::c_int,
-        __msg: *const ::c_void,
-        __bytes: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgWritev(
-        __rcvid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgWritev_r(
-        __rcvid: ::c_int,
-        __iov: *const ::iovec,
-        __parts: usize,
-        __offset: usize,
-    ) -> isize;
-    pub fn MsgSendPulse(
-        __coid: ::c_int,
-        __priority: ::c_int,
-        __code: ::c_int,
-        __value: ::c_int,
-    ) -> ::c_int;
-    pub fn MsgSendPulse_r(
-        __coid: ::c_int,
-        __priority: ::c_int,
-        __code: ::c_int,
-        __value: ::c_int,
     ) -> ::c_int;
     pub fn MsgSendPulsePtr(
         __coid: ::c_int,
@@ -885,54 +729,11 @@ extern "C" {
         __code: ::c_int,
         __value: *mut ::c_void,
     ) -> ::c_int;
-    pub fn MsgDeliverEvent(__rcvid: ::c_int, __event: *const ::sigevent) -> ::c_int;
-    pub fn MsgDeliverEvent_r(__rcvid: ::c_int, __event: *const ::sigevent) -> ::c_int;
-    pub fn MsgVerifyEvent(__rcvid: ::c_int, __event: *const ::sigevent) -> ::c_int;
-    pub fn MsgVerifyEvent_r(__rcvid: ::c_int, __event: *const ::sigevent) -> ::c_int;
     pub fn MsgRegisterEvent(__event: *mut ::sigevent, __coid: ::c_int) -> ::c_int;
     pub fn MsgRegisterEvent_r(__event: *mut ::sigevent, __coid: ::c_int) -> ::c_int;
     pub fn MsgUnregisterEvent(__event: *const ::sigevent) -> ::c_int;
     pub fn MsgUnregisterEvent_r(__event: *const ::sigevent) -> ::c_int;
-    pub fn MsgInfo(__rcvid: ::c_int, __info: *mut _msg_info64) -> ::c_int;
-    pub fn MsgInfo_r(__rcvid: ::c_int, __info: *mut _msg_info64) -> ::c_int;
-    pub fn MsgKeyData(
-        __rcvid: ::c_int,
-        __oper: ::c_int,
-        __key: u32,
-        __newkey: *mut u32,
-        __iov: *const ::iovec,
-        __parts: ::c_int,
-    ) -> ::c_int;
-    pub fn MsgKeyData_r(
-        __rcvid: ::c_int,
-        __oper: ::c_int,
-        __key: u32,
-        __newkey: *mut u32,
-        __iov: *const ::iovec,
-        __parts: ::c_int,
-    ) -> ::c_int;
-    pub fn MsgError(__rcvid: ::c_int, __err: ::c_int) -> ::c_int;
-    pub fn MsgError_r(__rcvid: ::c_int, __err: ::c_int) -> ::c_int;
-    pub fn MsgCurrent(__rcvid: ::c_int) -> ::c_int;
-    pub fn MsgCurrent_r(__rcvid: ::c_int) -> ::c_int;
-    pub fn MsgSendAsyncGbl(
-        __coid: ::c_int,
-        __smsg: *const ::c_void,
-        __sbytes: usize,
-        __msg_prio: ::c_uint,
-    ) -> ::c_int;
-    pub fn MsgSendAsync(__coid: ::c_int) -> ::c_int;
-    pub fn MsgReceiveAsyncGbl(
-        __chid: ::c_int,
-        __rmsg: *mut ::c_void,
-        __rbytes: usize,
-        __info: *mut _msg_info64,
-        __coid: ::c_int,
-    ) -> ::c_int;
-    pub fn MsgReceiveAsync(__chid: ::c_int, __iov: *const ::iovec, __parts: ::c_uint) -> ::c_int;
-    pub fn MsgPause(__rcvid: ::c_int, __cookie: ::c_uint) -> ::c_int;
-    pub fn MsgPause_r(__rcvid: ::c_int, __cookie: ::c_uint) -> ::c_int;
-
+ 
     pub fn SignalKill(
         __nd: u32,
         __pid: ::pid_t,
@@ -966,7 +767,6 @@ extern "C" {
         __value: *const ::sigval,
     ) -> ::c_int;
     pub fn SignalReturn(__info: *mut _sighandler_info) -> ::c_int;
-    pub fn SignalFault(__sigcode: ::c_uint, __regs: *mut ::c_void, __refaddr: usize) -> ::c_int;
     pub fn SignalAction(
         __pid: ::pid_t,
         __sigstub: unsafe extern "C" fn(),
@@ -1111,18 +911,6 @@ extern "C" {
     pub fn InterruptDetach_r(__id: ::c_int) -> ::c_int;
     pub fn InterruptWait(__flags: ::c_int, __timeout: *const u64) -> ::c_int;
     pub fn InterruptWait_r(__flags: ::c_int, __timeout: *const u64) -> ::c_int;
-    pub fn InterruptCharacteristic(
-        __type: ::c_int,
-        __id: ::c_int,
-        __new: *mut ::c_uint,
-        __old: *mut ::c_uint,
-    ) -> ::c_int;
-    pub fn InterruptCharacteristic_r(
-        __type: ::c_int,
-        __id: ::c_int,
-        __new: *mut ::c_uint,
-        __old: *mut ::c_uint,
-    ) -> ::c_int;
 
     pub fn SchedGet(__pid: ::pid_t, __tid: ::c_int, __param: *mut ::sched_param) -> ::c_int;
     pub fn SchedGet_r(__pid: ::pid_t, __tid: ::c_int, __param: *mut ::sched_param) -> ::c_int;
@@ -1150,18 +938,6 @@ extern "C" {
     pub fn SchedJobCreate_r(__job: *mut nto_job_t) -> ::c_int;
     pub fn SchedJobDestroy(__job: *mut nto_job_t) -> ::c_int;
     pub fn SchedJobDestroy_r(__job: *mut nto_job_t) -> ::c_int;
-    pub fn SchedWaypoint(
-        __job: *mut nto_job_t,
-        __new: *const i64,
-        __max: *const i64,
-        __old: *mut i64,
-    ) -> ::c_int;
-    pub fn SchedWaypoint_r(
-        __job: *mut nto_job_t,
-        __new: *const i64,
-        __max: *const i64,
-        __old: *mut i64,
-    ) -> ::c_int;
 
     pub fn TimerCreate(__id: ::clockid_t, __notify: *const ::sigevent) -> ::c_int;
     pub fn TimerCreate_r(__id: ::clockid_t, __notify: *const ::sigevent) -> ::c_int;
@@ -1201,20 +977,6 @@ extern "C" {
         __itime: *const ::_itimer,
         __otime: *mut ::_itimer,
     ) -> ::c_int;
-    pub fn TimerTimeout(
-        __id: ::clockid_t,
-        __flags: ::c_int,
-        __notify: *const ::sigevent,
-        __ntime: *const u64,
-        __otime: *mut u64,
-    ) -> ::c_int;
-    pub fn TimerTimeout_r(
-        __id: ::clockid_t,
-        __flags: ::c_int,
-        __notify: *const ::sigevent,
-        __ntime: *const u64,
-        __otime: *mut u64,
-    ) -> ::c_int;
 
     pub fn SyncTypeCreate(
         __type: ::c_uint,
@@ -1236,8 +998,6 @@ extern "C" {
     pub fn SyncMutexLock_r(__sync: *mut ::sync_t) -> ::c_int;
     pub fn SyncMutexUnlock(__sync: *mut ::sync_t) -> ::c_int;
     pub fn SyncMutexUnlock_r(__sync: *mut ::sync_t) -> ::c_int;
-    pub fn SyncMutexRevive(__sync: *mut ::sync_t) -> ::c_int;
-    pub fn SyncMutexRevive_r(__sync: *mut ::sync_t) -> ::c_int;
     pub fn SyncCondvarWait(__sync: *mut ::sync_t, __mutex: *mut ::sync_t) -> ::c_int;
     pub fn SyncCondvarWait_r(__sync: *mut ::sync_t, __mutex: *mut ::sync_t) -> ::c_int;
     pub fn SyncCondvarSignal(__sync: *mut ::sync_t, __all: ::c_int) -> ::c_int;

@@ -1567,7 +1567,29 @@ cfg_if! {
 }
 
 cfg_if! {
-    if #[cfg(target_os = "nto")] {
+    if #[cfg(target_env = "nto80")] {
+        extern {
+            pub fn readlinkat(dirfd: ::c_int,
+                pathname: *const ::c_char,
+                buf: *mut ::c_char,
+                bufsiz: ::size_t) -> ::ssize_t;
+            pub fn readlink(path: *const c_char, buf: *mut c_char, bufsz: ::size_t) -> ::ssize_t;
+            pub fn pselect(
+                nfds: ::c_int,
+                readfds: *mut fd_set,
+                writefds: *mut fd_set,
+                errorfds: *mut fd_set,
+                timeout: *const timespec,
+                sigmask: *const sigset_t,
+            ) -> ::c_int;
+            pub fn sigaction(
+                signum: ::c_int,
+                act: *const sigaction,
+                oldact: *mut sigaction
+            ) -> ::c_int;
+        }
+    }
+    else if #[cfg(any(target_env = "nto70", target_env = "nto71"))] {
         extern {
             pub fn readlinkat(dirfd: ::c_int,
                 pathname: *const ::c_char,
@@ -1588,7 +1610,7 @@ cfg_if! {
                 oldact: *mut sigaction
             ) -> ::c_int;
         }
-    } else {
+    }else {
         extern {
             pub fn readlinkat(dirfd: ::c_int,
                 pathname: *const ::c_char,

@@ -18,9 +18,9 @@ version = "0.2.164"
 default-features = false
 
 [build-dependencies]
-cc = "1.0.83"
+cc = { path = "/home/athomas/projects/personal/cc-rs" }
 # FIXME: Use fork ctest until the maintainer gets back.
-ctest2 = "0.4.3"
+ctest2 = { path = "/home/athomas/projects/personal/ctest2" }
 
 [features]
 default = ["std"]
