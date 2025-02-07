@@ -3037,6 +3037,8 @@ fn test_neutrino(target: &str) {
 
     let mut cfg = ctest_cfg();
 
+    let nto80 = target.contains("qnx800");
+
     headers! { cfg:
         "ctype.h",
         "dirent.h",
@@ -3051,7 +3053,7 @@ fn test_neutrino(target: &str) {
         "limits.h",
         "sys/link.h",
         "locale.h",
-        "sys/malloc.h",
+        [!nto80]:"sys/malloc.h",
         "rcheck/malloc.h",
         "malloc.h",
         "mqueue.h",
@@ -3115,11 +3117,13 @@ fn test_neutrino(target: &str) {
         "nl_types.h",
         "langinfo.h",
         "unix.h",
-        "nbutil.h",
+        [!nto80]:"nbutil.h",
         "aio.h",
         "net/bpf.h",
         "net/if_dl.h",
         "sys/syspage.h",
+        [nto80]:"sys/neutrino.h",
+        [nto80]:"sys/jail.h",
 
         // TODO: The following header file doesn't appear as part of the default headers
         //       found in a standard installation of Neutrino 7.1 SDP.  The structures/
@@ -3130,18 +3134,20 @@ fn test_neutrino(target: &str) {
     // Create and include a header file containing
     // items which are not included in any official
     // header file.
-    let internal_header = "internal.h";
-    let out_dir = env::var("OUT_DIR").unwrap();
-    cfg.header(internal_header);
-    cfg.include(&out_dir);
-    std::fs::write(
-        out_dir.to_owned() + "/" + internal_header,
-        "#ifndef __internal_h__
+    if !nto80 {
+        let internal_header = "internal.h";
+        let out_dir = env::var("OUT_DIR").unwrap();
+        cfg.header(internal_header);
+        cfg.include(&out_dir);
+        std::fs::write(
+            out_dir.to_owned() + "/" + internal_header,
+            "#ifndef __internal_h__
         #define __internal_h__
         void __my_thread_exit(const void **);
         #endif",
-    )
-    .unwrap();
+        )
+        .unwrap();
+    }
 
     cfg.type_name(move |ty, is_struct, is_union| {
         match ty {
@@ -3193,6 +3199,7 @@ fn test_neutrino(target: &str) {
             // Does not exist in Neutrino
             "locale_t" => true,
 
+            "__uint128" => true,
             _ => false,
         }
     });
@@ -3253,6 +3260,8 @@ fn test_neutrino(target: &str) {
             // stack unwinding bug.
             "__my_thread_exit" => true,
 
+            // Wrong const-ness
+            "dl_iterate_phdr" => true,
             _ => false,
         }
     });
@@ -3274,6 +3283,7 @@ fn test_neutrino(target: &str) {
         (struct_ == "sigaction" && field == "sa_sigaction") ||
         // does not exist
         (struct_ == "syspage_entry" && field == "__reserved") ||
+        (struct_ == "ifreq" && field == "ifr_ifru") ||
         false // keep me for smaller diffs when something is added above
     });
 

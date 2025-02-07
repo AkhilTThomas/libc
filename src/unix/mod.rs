@@ -1632,7 +1632,7 @@ cfg_if! {
 }
 
 cfg_if! {
-    if #[cfg(target_os = "nto")] {
+    if #[cfg(any(target_env = "nto70", target_env = "nto71", target_env = "nto71_iosock"))] {
         extern "C" {
             pub fn readlinkat(
                 dirfd: c_int,
@@ -1652,7 +1652,8 @@ cfg_if! {
             pub fn sigaction(signum: c_int, act: *const sigaction, oldact: *mut sigaction)
                 -> c_int;
         }
-    } else {
+    }
+    else {
         extern "C" {
             pub fn readlinkat(
                 dirfd: c_int,
@@ -1660,7 +1661,9 @@ cfg_if! {
                 buf: *mut c_char,
                 bufsiz: size_t,
             ) -> ssize_t;
+            #[cfg(not(target_env = "nto80"))]            
             pub fn fmemopen(buf: *mut c_void, size: size_t, mode: *const c_char) -> *mut FILE;
+            #[cfg(not(target_env = "nto80"))]
             pub fn open_memstream(ptr: *mut *mut c_char, sizeloc: *mut size_t) -> *mut FILE;
             pub fn atexit(cb: extern "C" fn()) -> c_int;
             #[cfg_attr(target_os = "netbsd", link_name = "__sigaction14")]

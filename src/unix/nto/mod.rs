@@ -72,6 +72,8 @@ pub type sem_t = sync_t;
 
 pub type nl_item = c_int;
 
+pub type caddr_t = *mut c_char;
+
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
 impl Copy for timezone {}
@@ -117,20 +119,6 @@ s! {
     #[repr(packed)]
     pub struct in_addr {
         pub s_addr: crate::in_addr_t,
-    }
-
-    pub struct sockaddr {
-        pub sa_len: u8,
-        pub sa_family: sa_family_t,
-        pub sa_data: [c_char; 14],
-    }
-
-    pub struct sockaddr_in {
-        pub sin_len: u8,
-        pub sin_family: sa_family_t,
-        pub sin_port: crate::in_port_t,
-        pub sin_addr: crate::in_addr,
-        pub sin_zero: [i8; 8],
     }
 
     pub struct sockaddr_in6 {
@@ -234,11 +222,6 @@ s! {
         pub _Reserved: [*mut c_char; 8],
     }
 
-    pub struct in_pktinfo {
-        pub ipi_addr: crate::in_addr,
-        pub ipi_ifindex: c_uint,
-    }
-
     pub struct ifaddrs {
         pub ifa_next: *mut ifaddrs,
         pub ifa_name: *mut c_char,
@@ -253,20 +236,6 @@ s! {
         pub arp_pa: crate::sockaddr,
         pub arp_ha: crate::sockaddr,
         pub arp_flags: c_int,
-    }
-
-    #[repr(packed)]
-    pub struct arphdr {
-        pub ar_hrd: u16,
-        pub ar_pro: u16,
-        pub ar_hln: u8,
-        pub ar_pln: u8,
-        pub ar_op: u16,
-    }
-
-    pub struct mmsghdr {
-        pub msg_hdr: crate::msghdr,
-        pub msg_len: c_uint,
     }
 
     #[repr(align(8))]
@@ -474,19 +443,6 @@ s! {
         pub c_ospeed: crate::speed_t,
     }
 
-    pub struct mallinfo {
-        pub arena: c_int,
-        pub ordblks: c_int,
-        pub smblks: c_int,
-        pub hblks: c_int,
-        pub hblkhd: c_int,
-        pub usmblks: c_int,
-        pub fsmblks: c_int,
-        pub uordblks: c_int,
-        pub fordblks: c_int,
-        pub keepcost: c_int,
-    }
-
     pub struct flock {
         pub l_type: i16,
         pub l_whence: i16,
@@ -557,27 +513,6 @@ s! {
         re_g: *mut c_void,
     }
 
-    pub struct _thread_attr {
-        pub __flags: c_int,
-        pub __stacksize: size_t,
-        pub __stackaddr: *mut c_void,
-        pub __exitfunc: Option<unsafe extern "C" fn(_fake: *mut c_void)>,
-        pub __policy: c_int,
-        pub __param: crate::__sched_param,
-        pub __guardsize: c_uint,
-        pub __prealloc: c_uint,
-        __spare: [c_int; 2],
-    }
-
-    pub struct _sync_attr {
-        pub __protocol: c_int,
-        pub __flags: c_int,
-        pub __prioceiling: c_int,
-        pub __clockid: c_int,
-        pub __count: c_int,
-        __reserved: [c_int; 3],
-    }
-
     pub struct sockcred {
         pub sc_uid: crate::uid_t,
         pub sc_euid: crate::uid_t,
@@ -587,16 +522,14 @@ s! {
         pub sc_groups: [crate::gid_t; 1],
     }
 
+    pub struct ifreq_buffer {
+        pub length: size_t,
+        pub buffer: *mut c_void,
+    }
+
     pub struct bpf_program {
         pub bf_len: c_uint,
         pub bf_insns: *mut crate::bpf_insn,
-    }
-
-    pub struct bpf_stat {
-        pub bs_recv: u64,
-        pub bs_drop: u64,
-        pub bs_capt: u64,
-        bs_padding: [u64; 13],
     }
 
     pub struct bpf_version {
@@ -621,12 +554,6 @@ s! {
     pub struct bpf_dltlist {
         pub bfl_len: c_uint,
         pub bfl_list: *mut c_uint,
-    }
-
-    pub struct unpcbid {
-        pub unp_pid: crate::pid_t,
-        pub unp_euid: crate::uid_t,
-        pub unp_egid: crate::gid_t,
     }
 
     pub struct dl_phdr_info {
@@ -723,38 +650,33 @@ s_no_extra_traits! {
         msg_pad4: [c_long; 4],
     }
 
-    pub struct sockaddr_dl {
-        pub sdl_len: c_uchar,
-        pub sdl_family: crate::sa_family_t,
-        pub sdl_index: u16,
-        pub sdl_type: c_uchar,
-        pub sdl_nlen: c_uchar,
-        pub sdl_alen: c_uchar,
-        pub sdl_slen: c_uchar,
-        pub sdl_data: [c_char; 12],
-    }
-
-    pub struct sync_t {
-        __u: c_uint, // union
-        pub __owner: c_uint,
-    }
-
     #[repr(align(4))]
-    pub struct pthread_barrier_t {
-        // union
-        __pad: [u8; 28], // union
+    pub struct pthread_barrier_t {         // union
+        __pad: [u8; 28],                   // union
     }
 
-    pub struct pthread_rwlock_t {
-        pub __active: c_int,
-        pub __blockedwriters: c_int,
-        pub __blockedreaders: c_int,
-        pub __heavy: c_int,
-        pub __lock: crate::pthread_mutex_t, // union
-        pub __rcond: crate::pthread_cond_t, // union
-        pub __wcond: crate::pthread_cond_t, // union
-        pub __owner: c_uint,
-        pub __spare: c_uint,
+    pub union __c_anonymous_ifr_ifru {
+        pub ifru_addr: crate::sockaddr,
+        pub ifru_dstaddr: crate::sockaddr,
+        pub ifru_broadaddr: crate::sockaddr,
+        pub ifru_buffer: ifreq_buffer,
+        pub ifru_flags: [c_short; 2],
+        pub ifru_index: c_short,
+        pub ifru_jid: c_int,
+        pub ifru_metric: c_int,
+        pub ifru_mtu: c_int,
+        pub ifru_phys: c_int,
+        pub ifru_media: c_int,
+        pub ifru_data: caddr_t,
+        pub ifru_cap: [c_int; 2],
+        pub ifru_fib: c_uint,
+        pub ifru_vlan_pcp: c_uchar,
+    }
+
+    pub struct ifreq {
+        /// if name, e.g. "en0"
+        pub ifr_name: [c_char; crate::IFNAMSIZ],
+        pub ifr_ifru: __c_anonymous_ifr_ifru,
     }
 }
 
@@ -950,37 +872,6 @@ cfg_if! {
             }
         }
 
-        // syspage_entry
-        impl fmt::Debug for syspage_entry {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                f.debug_struct("syspage_entry")
-                    .field("size", &self.size)
-                    .field("total_size", &self.total_size)
-                    .field("type_", &self.type_)
-                    .field("num_cpu", &self.num_cpu)
-                    .field("system_private", &self.system_private)
-                    .field("old_asinfo", &self.old_asinfo)
-                    .field("hwinfo", &self.hwinfo)
-                    .field("old_cpuinfo", &self.old_cpuinfo)
-                    .field("old_cacheattr", &self.old_cacheattr)
-                    .field("qtime", &self.qtime)
-                    .field("callout", &self.callout)
-                    .field("callin", &self.callin)
-                    .field("typed_strings", &self.typed_strings)
-                    .field("strings", &self.strings)
-                    .field("old_intrinfo", &self.old_intrinfo)
-                    .field("smp", &self.smp)
-                    .field("pminfo", &self.pminfo)
-                    .field("old_mdriver", &self.old_mdriver)
-                    .field("new_asinfo", &self.new_asinfo)
-                    .field("new_cpuinfo", &self.new_cpuinfo)
-                    .field("new_cacheattr", &self.new_cacheattr)
-                    .field("new_intrinfo", &self.new_intrinfo)
-                    .field("new_mdriver", &self.new_mdriver)
-                    .finish()
-            }
-        }
-
         impl PartialEq for utsname {
             fn eq(&self, other: &utsname) -> bool {
                 self.sysname
@@ -1149,6 +1040,377 @@ cfg_if! {
     }
 }
 
+pub type nto_job_t = sync_t;
+
+s! {
+    pub struct intrspin {
+        pub value: c_uint, // volatile
+    }
+
+    pub struct iov_t {
+        pub iov_base: *mut c_void, // union
+        pub iov_len: size_t,
+    }
+
+    pub struct _itimer {
+        pub nsec: u64,
+        pub interval_nsec: u64,
+    }
+
+    pub struct _msg_info64 {
+        pub nd: u32,
+        pub srcnd: u32,
+        pub pid: crate::pid_t,
+        pub tid: i32,
+        pub chid: i32,
+        pub scoid: i32,
+        pub coid: i32,
+        pub priority: i16,
+        pub flags: i16,
+        pub msglen: isize,
+        pub srcmsglen: isize,
+        pub dstmsglen: isize,
+        pub type_id: u32,
+        reserved: u32,
+    }
+
+    pub struct _cred_info {
+        pub ruid: crate::uid_t,
+        pub euid: crate::uid_t,
+        pub suid: crate::uid_t,
+        pub rgid: crate::gid_t,
+        pub egid: crate::gid_t,
+        pub sgid: crate::gid_t,
+        pub ngroups: u32,
+        pub grouplist: [crate::gid_t; 8],
+    }
+
+    pub struct _client_info {
+        pub nd: u32,
+        pub pid: crate::pid_t,
+        pub sid: crate::pid_t,
+        pub flags: u32,
+        pub cred: _cred_info,
+    }
+
+    pub struct _client_able {
+        pub ability: u32,
+        pub flags: u32,
+        pub range_lo: u64,
+        pub range_hi: u64,
+    }
+
+    pub struct nto_channel_config {
+        pub event: crate::sigevent,
+        pub num_pulses: c_uint,
+        pub rearm_threshold: c_uint,
+        pub options: c_uint,
+        reserved: [c_uint; 3],
+    }
+
+    // TODO: The following structures are defined in a header file which doesn't
+    //       appear as part of the default headers found in a standard installation
+    //       of Neutrino 7.1 SDP.  Commented out for now.
+    //pub struct _asyncmsg_put_header {
+    //    pub err: c_int,
+    //    pub iov: *mut crate::iov_t,
+    //    pub parts: c_int,
+    //    pub handle: c_uint,
+    //    pub cb: Option<
+    //        unsafe extern "C" fn(
+    //            err: c_int,
+    //            buf: *mut c_void,
+    //            handle: c_uint,
+    //        ) -> c_int>,
+    //    pub put_hdr_flags: c_uint,
+    //}
+
+    //pub struct _asyncmsg_connection_attr {
+    //    pub call_back: Option<
+    //        unsafe extern "C" fn(
+    //            err: c_int,
+    //            buff: *mut c_void,
+    //            handle: c_uint,
+    //        ) -> c_int>,
+    //    pub buffer_size: size_t,
+    //    pub max_num_buffer: c_uint,
+    //    pub trigger_num_msg: c_uint,
+    //    pub trigger_time: crate::_itimer,
+    //    reserve: c_uint,
+    //}
+
+    //pub struct _asyncmsg_connection_descriptor {
+    //    pub flags: c_uint,
+    //    pub sendq_size: c_uint,
+    //    pub sendq_head: c_uint,
+    //    pub sendq_tail: c_uint,
+    //    pub sendq_free: c_uint,
+    //    pub err: c_int,
+    //    pub ev: crate::sigevent,
+    //    pub num_curmsg: c_uint,
+    //    pub ttimer: crate::timer_t,
+    //    pub block_con: crate::pthread_cond_t,
+    //    pub mu: crate::pthread_mutex_t,
+    //    reserved: c_uint,
+    //    pub attr: crate::_asyncmsg_connection_attr,
+    //    pub reserves: [c_uint; 3],
+    //    pub sendq: [crate::_asyncmsg_put_header; 1], // flexarray
+    //}
+
+    pub struct __c_anonymous_struct_ev {
+        pub event: crate::sigevent,
+        pub coid: c_int,
+    }
+
+    pub struct _channel_connect_attr {
+        // union
+        pub ev: crate::__c_anonymous_struct_ev,
+    }
+
+    pub struct _sighandler_info {
+        pub siginfo: crate::siginfo_t,
+        pub handler: Option<unsafe extern "C" fn(value: c_int)>,
+        pub context: *mut c_void,
+    }
+
+    pub struct __c_anonymous_struct_time {
+        pub length: c_uint,
+        pub scale: c_uint,
+    }
+
+    pub struct _idle_hook {
+        pub hook_size: c_uint,
+        pub cmd: c_uint,
+        pub mode: c_uint,
+        pub latency: c_uint,
+        pub next_fire: u64,
+        pub curr_time: u64,
+        pub tod_adjust: u64,
+        pub resp: c_uint,
+        pub time: __c_anonymous_struct_time,
+        pub trigger: crate::sigevent,
+        pub intrs: *mut c_uint,
+        pub block_stack_size: c_uint,
+    }
+
+    pub struct _clockadjust {
+        pub tick_count: u32,
+        pub tick_nsec_inc: i32,
+    }
+
+    pub struct _sched_info {
+        pub priority_min: c_int,
+        pub priority_max: c_int,
+        pub interval: u64,
+        pub priority_priv: c_int,
+        reserved: [c_int; 11],
+    }
+
+    pub struct _timer_info {
+        pub itime: crate::_itimer,
+        pub otime: crate::_itimer,
+        pub flags: u32,
+        pub tid: i32,
+        pub notify: i32,
+        pub clockid: crate::clockid_t,
+        pub overruns: u32,
+        pub event: crate::sigevent, // union
+    }
+
+    pub struct _clockperiod {
+        pub nsec: u32,
+        pub fract: i32,
+    }
+}
+
+pub const SYSMGR_PID: u32 = 1;
+pub const SYSMGR_CHID: u32 = 1;
+pub const SYSMGR_COID: u32 = _NTO_SIDE_CHANNEL;
+pub const SYSMGR_HANDLE: u32 = 0;
+
+pub const _NTO_TIMEOUT_RECEIVE: i32 = 1 << STATE_RECEIVE;
+pub const _NTO_TIMEOUT_SEND: i32 = 1 << STATE_SEND;
+pub const _NTO_TIMEOUT_REPLY: i32 = 1 << STATE_REPLY;
+pub const _NTO_TIMEOUT_SIGSUSPEND: i32 = 1 << STATE_SIGSUSPEND;
+pub const _NTO_TIMEOUT_SIGWAITINFO: i32 = 1 << STATE_SIGWAITINFO;
+pub const _NTO_TIMEOUT_NANOSLEEP: i32 = 1 << STATE_NANOSLEEP;
+pub const _NTO_TIMEOUT_MUTEX: i32 = 1 << STATE_MUTEX;
+pub const _NTO_TIMEOUT_CONDVAR: i32 = 1 << STATE_CONDVAR;
+pub const _NTO_TIMEOUT_JOIN: i32 = 1 << STATE_JOIN;
+pub const _NTO_TIMEOUT_INTR: i32 = 1 << STATE_INTR;
+pub const _NTO_TIMEOUT_SEM: i32 = 1 << STATE_SEM;
+
+pub const _NTO_MI_ENDIAN_BIG: u32 = 1;
+pub const _NTO_MI_ENDIAN_DIFF: u32 = 2;
+pub const _NTO_MI_UNBLOCK_REQ: u32 = 256;
+pub const _NTO_MI_NET_CRED_DIRTY: u32 = 512;
+pub const _NTO_MI_CHROOT: u32 = 2048;
+pub const _NTO_MI_BITS_64: u32 = 4096;
+pub const _NTO_MI_BITS_DIFF: u32 = 8192;
+
+pub const _NTO_CI_ENDIAN_BIG: u32 = 1;
+pub const _NTO_CI_BKGND_PGRP: u32 = 4;
+pub const _NTO_CI_ORPHAN_PGRP: u32 = 8;
+pub const _NTO_CI_STOPPED: u32 = 128;
+pub const _NTO_CI_UNABLE: u32 = 256;
+pub const _NTO_CI_TYPE_ID: u32 = 512;
+pub const _NTO_CI_CHROOT: u32 = 2048;
+
+pub const _NTO_CI_LOADER: u32 = 32768;
+pub const _NTO_CI_FULL_GROUPS: u32 = 2147483648;
+
+pub const _NTO_TI_ACTIVE: u32 = 1;
+pub const _NTO_TI_ABSOLUTE: u32 = 2;
+pub const _NTO_TI_EXPIRED: u32 = 4;
+pub const _NTO_TI_TOD_BASED: u32 = 8;
+pub const _NTO_TI_TARGET_PROCESS: u32 = 16;
+pub const _NTO_TI_REPORT_TOLERANCE: u32 = 32;
+pub const _NTO_TI_PRECISE: u32 = 64;
+pub const _NTO_TI_TOLERANT: u32 = 128;
+pub const _NTO_TI_WAKEUP: u32 = 256;
+pub const _NTO_TI_PROCESS_TOLERANT: u32 = 512;
+pub const _NTO_TI_HIGH_RESOLUTION: u32 = 1024;
+
+pub const _PULSE_TYPE: u32 = 0;
+pub const _PULSE_SUBTYPE: u32 = 0;
+pub const _PULSE_CODE_UNBLOCK: i32 = -32;
+pub const _PULSE_CODE_DISCONNECT: i32 = -33;
+pub const _PULSE_CODE_THREADDEATH: i32 = -34;
+pub const _PULSE_CODE_COIDDEATH: i32 = -35;
+pub const _PULSE_CODE_NET_ACK: i32 = -36;
+pub const _PULSE_CODE_NET_UNBLOCK: i32 = -37;
+pub const _PULSE_CODE_NET_DETACH: i32 = -38;
+pub const _PULSE_CODE_RESTART: i32 = -39;
+pub const _PULSE_CODE_NORESTART: i32 = -40;
+pub const _PULSE_CODE_UNBLOCK_RESTART: i32 = -41;
+pub const _PULSE_CODE_UNBLOCK_TIMER: i32 = -42;
+pub const _PULSE_CODE_MINAVAIL: u32 = 0;
+pub const _PULSE_CODE_MAXAVAIL: u32 = 127;
+
+pub const _NTO_HARD_FLAGS_END: u32 = 1;
+
+pub const _NTO_PULSE_IF_UNIQUE: u32 = 4096;
+pub const _NTO_PULSE_REPLACE: u32 = 8192;
+
+pub const _NTO_PF_NOCLDSTOP: u32 = 1;
+pub const _NTO_PF_LOADING: u32 = 2;
+pub const _NTO_PF_TERMING: u32 = 4;
+pub const _NTO_PF_ZOMBIE: u32 = 8;
+pub const _NTO_PF_NOZOMBIE: u32 = 16;
+pub const _NTO_PF_FORKED: u32 = 32;
+pub const _NTO_PF_STOPPED: u32 = 128;
+pub const _NTO_PF_DEBUG_STOPPED: u32 = 256;
+pub const _NTO_PF_BKGND_PGRP: u32 = 512;
+pub const _NTO_PF_NOISYNC: u32 = 1024;
+pub const _NTO_PF_CONTINUED: u32 = 2048;
+pub const _NTO_PF_CHECK_INTR: u32 = 4096;
+pub const _NTO_PF_COREDUMP: u32 = 8192;
+pub const _NTO_PF_WAITINFO: u32 = 131072;
+pub const _NTO_PF_NOCOREDUMP: u32 = 1048576;
+pub const _NTO_PF_WAITDONE: u32 = 4194304;
+pub const _NTO_PF_ASLR: u32 = 16777216;
+pub const _NTO_PF_EXECED: u32 = 33554432;
+pub const _NTO_PF_APP_STOPPED: u32 = 67108864;
+pub const _NTO_PF_64BIT: u32 = 134217728;
+pub const _NTO_PF_NOEXEC_STACK: u32 = 1073741824;
+pub const _NTO_PF_LOADER_PERMS: u32 = 2147483648;
+
+pub const _NTO_TCTL_IO_PRIV: u32 = 1;
+pub const _NTO_TCTL_THREADS_HOLD: u32 = 2;
+pub const _NTO_TCTL_THREADS_CONT: u32 = 3;
+pub const _NTO_TCTL_RUNMASK: u32 = 4;
+pub const _NTO_TCTL_ALIGN_FAULT: u32 = 5;
+pub const _NTO_TCTL_RUNMASK_GET_AND_SET: u32 = 6;
+
+pub const _NTO_TCTL_ONE_THREAD_HOLD: u32 = 8;
+pub const _NTO_TCTL_ONE_THREAD_CONT: u32 = 9;
+pub const _NTO_TCTL_RUNMASK_GET_AND_SET_INHERIT: u32 = 10;
+pub const _NTO_TCTL_NAME: u32 = 11;
+pub const _NTO_TCTL_IO: u32 = 14;
+pub const _NTO_TCTL_ADD_EXIT_EVENT: u32 = 17;
+pub const _NTO_TCTL_DEL_EXIT_EVENT: u32 = 18;
+pub const _NTO_TCTL_IO_LEVEL: u32 = 19;
+pub const _NTO_TCTL_RESERVED: u32 = 2147483648;
+pub const _NTO_TCTL_IO_LEVEL_INHERIT: u32 = 1073741824;
+pub const _NTO_IO_LEVEL_NONE: u32 = 1;
+pub const _NTO_IO_LEVEL_1: u32 = 2;
+pub const _NTO_IO_LEVEL_2: u32 = 3;
+
+pub const _NTO_THREAD_NAME_MAX: u32 = 100;
+
+pub const _NTO_CHF_FIXED_PRIORITY: u32 = 1;
+pub const _NTO_CHF_UNBLOCK: u32 = 2;
+pub const _NTO_CHF_THREAD_DEATH: u32 = 4;
+pub const _NTO_CHF_DISCONNECT: u32 = 8;
+pub const _NTO_CHF_NET_MSG: u32 = 16;
+pub const _NTO_CHF_SENDER_LEN: u32 = 32;
+pub const _NTO_CHF_COID_DISCONNECT: u32 = 64;
+pub const _NTO_CHF_REPLY_LEN: u32 = 128;
+pub const _NTO_CHF_PULSE_POOL: u32 = 256;
+pub const _NTO_CHF_GLOBAL: u32 = 2048;
+pub const _NTO_CHF_PRIVATE: u32 = 4096;
+pub const _NTO_CHF_MSG_PAUSING: u32 = 8192;
+pub const _NTO_CHF_INHERIT_RUNMASK: u32 = 16384;
+pub const _NTO_CHF_UNBLOCK_TIMER: u32 = 32768;
+
+pub const _NTO_CHO_CUSTOM_EVENT: u32 = 1;
+
+pub const _NTO_COF_CLOEXEC: u32 = 1;
+pub const _NTO_COF_DEAD: u32 = 2;
+pub const _NTO_COF_NOSHARE: u32 = 64;
+pub const _NTO_COF_NOEVENT: u32 = 2048;
+pub const _NTO_COF_REG_EVENTS: u32 = 8192;
+
+pub const _NTO_COF_MASK: u32 = 65535;
+
+pub const _NTO_SIDE_CHANNEL: u32 = 1073741824;
+
+pub const _NTO_CONNECTION_SCOID: u32 = 65536;
+pub const _NTO_GLOBAL_CHANNEL: u32 = 1073741824;
+
+pub const _NTO_IC_LATENCY: u32 = 0;
+
+pub const _NTO_INTR_FLAGS_END: u32 = 1;
+pub const _NTO_INTR_FLAGS_NO_UNMASK: u32 = 2;
+pub const _NTO_INTR_FLAGS_PROCESS: u32 = 4;
+pub const _NTO_INTR_FLAGS_TRK_MSK: u32 = 8;
+pub const _NTO_INTR_FLAGS_ARRAY: u32 = 16;
+pub const _NTO_INTR_FLAGS_EXCLUSIVE: u32 = 32;
+pub const _NTO_INTR_FLAGS_FPU: u32 = 64;
+
+pub const _NTO_INTR_CLASS_EXTERNAL: u32 = 0;
+pub const _NTO_INTR_CLASS_SYNTHETIC: u32 = 2147418112;
+
+pub const _NTO_INTR_SPARE: u32 = 2147483647;
+
+pub const _NTO_HOOK_IDLE: u32 = 2147418113;
+pub const _NTO_HOOK_OVERDRIVE: u32 = 2147418114;
+pub const _NTO_HOOK_LAST: u32 = 2147418114;
+pub const _NTO_HOOK_IDLE2_FLAG: u32 = 32768;
+
+pub const _NTO_IH_CMD_SLEEP_SETUP: u32 = 1;
+pub const _NTO_IH_CMD_SLEEP_BLOCK: u32 = 2;
+pub const _NTO_IH_CMD_SLEEP_WAKEUP: u32 = 4;
+pub const _NTO_IH_CMD_SLEEP_ONLINE: u32 = 8;
+pub const _NTO_IH_RESP_NEEDS_BLOCK: u32 = 1;
+pub const _NTO_IH_RESP_NEEDS_WAKEUP: u32 = 2;
+pub const _NTO_IH_RESP_NEEDS_ONLINE: u32 = 4;
+pub const _NTO_IH_RESP_SYNC_TIME: u32 = 16;
+pub const _NTO_IH_RESP_SYNC_TLB: u32 = 32;
+pub const _NTO_IH_RESP_SUGGEST_OFFLINE: u32 = 256;
+pub const _NTO_IH_RESP_SLEEP_MODE_REACHED: u32 = 512;
+pub const _NTO_IH_RESP_DELIVER_INTRS: u32 = 1024;
+
+pub const _NTO_SCTL_SETPRIOCEILING: u32 = 1;
+pub const _NTO_SCTL_GETPRIOCEILING: u32 = 2;
+pub const _NTO_SCTL_SETEVENT: u32 = 3;
+pub const _NTO_SCTL_MUTEX_WAKEUP: u32 = 4;
+pub const _NTO_SCTL_MUTEX_CONSISTENT: u32 = 5;
+pub const _NTO_SCTL_SEM_VALUE: u32 = 6;
+
+pub const _NTO_CLIENTINFO_GETGROUPS: u32 = 1;
+pub const _NTO_CLIENTINFO_GETTYPEID: u32 = 2;
+
 pub const _SYSNAME_SIZE: usize = 256 + 1;
 pub const RLIM_INFINITY: crate::rlim_t = 0xfffffffffffffffd;
 pub const O_LARGEFILE: c_int = 0o0100000;
@@ -1236,44 +1498,7 @@ pub const SCM_CREDS: c_int = 0x04;
 
 pub const MAP_TYPE: c_int = 0x3;
 
-pub const IFF_UP: c_int = 0x00000001;
-pub const IFF_BROADCAST: c_int = 0x00000002;
-pub const IFF_DEBUG: c_int = 0x00000004;
-pub const IFF_LOOPBACK: c_int = 0x00000008;
-pub const IFF_POINTOPOINT: c_int = 0x00000010;
-pub const IFF_NOTRAILERS: c_int = 0x00000020;
-pub const IFF_RUNNING: c_int = 0x00000040;
-pub const IFF_NOARP: c_int = 0x00000080;
-pub const IFF_PROMISC: c_int = 0x00000100;
-pub const IFF_ALLMULTI: c_int = 0x00000200;
-pub const IFF_MULTICAST: c_int = 0x00008000;
-
-pub const AF_UNSPEC: c_int = 0;
-pub const AF_UNIX: c_int = AF_LOCAL;
-pub const AF_LOCAL: c_int = 1;
-pub const AF_INET: c_int = 2;
-pub const AF_IPX: c_int = 23;
-pub const AF_APPLETALK: c_int = 16;
-pub const AF_INET6: c_int = 24;
-pub const AF_ROUTE: c_int = 17;
-pub const AF_SNA: c_int = 11;
-pub const AF_BLUETOOTH: c_int = 31;
-pub const AF_ISDN: c_int = 26;
-
-pub const PF_UNSPEC: c_int = AF_UNSPEC;
-pub const PF_UNIX: c_int = PF_LOCAL;
-pub const PF_LOCAL: c_int = AF_LOCAL;
-pub const PF_INET: c_int = AF_INET;
-pub const PF_IPX: c_int = AF_IPX;
-pub const PF_APPLETALK: c_int = AF_APPLETALK;
-pub const PF_INET6: c_int = AF_INET6;
-pub const pseudo_AF_KEY: c_int = 29;
-pub const PF_KEY: c_int = pseudo_AF_KEY;
-pub const PF_ROUTE: c_int = AF_ROUTE;
-pub const PF_SNA: c_int = AF_SNA;
-
 pub const PF_BLUETOOTH: c_int = AF_BLUETOOTH;
-pub const PF_ISDN: c_int = AF_ISDN;
 
 pub const SOMAXCONN: c_int = 128;
 
@@ -1287,22 +1512,6 @@ pub const MSG_EOR: c_int = 0x0008;
 pub const MSG_WAITALL: c_int = 0x0040;
 pub const MSG_NOSIGNAL: c_int = 0x0800;
 pub const MSG_WAITFORONE: c_int = 0x2000;
-
-pub const IP_TOS: c_int = 3;
-pub const IP_TTL: c_int = 4;
-pub const IP_HDRINCL: c_int = 2;
-pub const IP_OPTIONS: c_int = 1;
-pub const IP_RECVOPTS: c_int = 5;
-pub const IP_RETOPTS: c_int = 8;
-pub const IP_PKTINFO: c_int = 25;
-pub const IP_IPSEC_POLICY_COMPAT: c_int = 22;
-pub const IP_MULTICAST_IF: c_int = 9;
-pub const IP_MULTICAST_TTL: c_int = 10;
-pub const IP_MULTICAST_LOOP: c_int = 11;
-pub const IP_ADD_MEMBERSHIP: c_int = 12;
-pub const IP_DROP_MEMBERSHIP: c_int = 13;
-pub const IP_DEFAULT_MULTICAST_TTL: c_int = 1;
-pub const IP_DEFAULT_MULTICAST_LOOP: c_int = 1;
 
 pub const IPPROTO_HOPOPTS: c_int = 0;
 pub const IPPROTO_IGMP: c_int = 2;
@@ -1343,7 +1552,7 @@ pub const IPV6_JOIN_GROUP: c_int = 12;
 pub const IPV6_LEAVE_GROUP: c_int = 13;
 pub const IPV6_CHECKSUM: c_int = 26;
 pub const IPV6_V6ONLY: c_int = 27;
-pub const IPV6_IPSEC_POLICY_COMPAT: c_int = 28;
+
 pub const IPV6_RTHDRDSTOPTS: c_int = 35;
 pub const IPV6_RECVPKTINFO: c_int = 36;
 pub const IPV6_RECVHOPLIMIT: c_int = 37;
@@ -1360,11 +1569,6 @@ pub const IPV6_DSTOPTS: c_int = 50;
 pub const IPV6_RECVTCLASS: c_int = 57;
 pub const IPV6_TCLASS: c_int = 61;
 pub const IPV6_DONTFRAG: c_int = 62;
-
-pub const TCP_NODELAY: c_int = 0x01;
-pub const TCP_MAXSEG: c_int = 0x02;
-pub const TCP_MD5SIG: c_int = 0x10;
-pub const TCP_KEEPALIVE: c_int = 0x04;
 
 pub const SHUT_RD: c_int = 0;
 pub const SHUT_WR: c_int = 1;
@@ -1512,32 +1716,7 @@ pub const MAX_IPOPTLEN: u8 = 40;
 pub const IPVERSION: u8 = 4;
 pub const MAXTTL: u8 = 255;
 
-pub const ARPHRD_ETHER: u16 = 1;
-pub const ARPHRD_IEEE802: u16 = 6;
-pub const ARPHRD_ARCNET: u16 = 7;
-pub const ARPHRD_IEEE1394: u16 = 24;
-
 pub const SOL_SOCKET: c_int = 0xffff;
-
-pub const SO_DEBUG: c_int = 0x0001;
-pub const SO_REUSEADDR: c_int = 0x0004;
-pub const SO_TYPE: c_int = 0x1008;
-pub const SO_ERROR: c_int = 0x1007;
-pub const SO_DONTROUTE: c_int = 0x0010;
-pub const SO_BROADCAST: c_int = 0x0020;
-pub const SO_SNDBUF: c_int = 0x1001;
-pub const SO_RCVBUF: c_int = 0x1002;
-pub const SO_KEEPALIVE: c_int = 0x0008;
-pub const SO_OOBINLINE: c_int = 0x0100;
-pub const SO_LINGER: c_int = 0x0080;
-pub const SO_REUSEPORT: c_int = 0x0200;
-pub const SO_RCVLOWAT: c_int = 0x1004;
-pub const SO_SNDLOWAT: c_int = 0x1003;
-pub const SO_RCVTIMEO: c_int = 0x1006;
-pub const SO_SNDTIMEO: c_int = 0x1005;
-pub const SO_BINDTODEVICE: c_int = 0x0800;
-pub const SO_TIMESTAMP: c_int = 0x0400;
-pub const SO_ACCEPTCONN: c_int = 0x0002;
 
 pub const TIOCM_LE: c_int = 0x0100;
 pub const TIOCM_DTR: c_int = 0x0001;
@@ -1574,8 +1753,12 @@ pub const SEM_FAILED: *mut crate::sem_t = 0xFFFFFFFFFFFFFFFF as *mut sem_t;
 pub const AI_PASSIVE: c_int = 0x00000001;
 pub const AI_CANONNAME: c_int = 0x00000002;
 pub const AI_NUMERICHOST: c_int = 0x00000004;
-
 pub const AI_NUMERICSERV: c_int = 0x00000008;
+pub const AI_ALL: c_int = 0x00000100;
+pub const AI_V4MAPPED_CFG: c_int = 0x00000200;
+pub const AI_ADDRCONFIG: c_int = 0x00000400;
+pub const AI_V4MAPPED: c_int = 0x00000800;
+pub const AI_DEFAULT: c_int = AI_V4MAPPED_CFG | AI_ADDRCONFIG;
 
 pub const EAI_BADFLAGS: c_int = 3;
 pub const EAI_NONAME: c_int = 8;
@@ -1614,8 +1797,6 @@ pub const POSIX_SPAWN_SETSIGDEF: c_short = 0x0004;
 pub const POSIX_SPAWN_SETSIGMASK: c_short = 0x0002;
 pub const POSIX_SPAWN_SETSCHEDPARAM: c_short = 0x0400;
 pub const POSIX_SPAWN_SETSCHEDULER: c_short = 0x0040;
-
-pub const IPTOS_ECN_NOT_ECT: u8 = 0x00;
 
 pub const RTF_UP: c_ushort = 0x0001;
 pub const RTF_GATEWAY: c_ushort = 0x0002;
@@ -2092,7 +2273,6 @@ pub const FOPEN_MAX: c_uint = 16;
 pub const FILENAME_MAX: c_uint = 255;
 
 pub const NI_MAXHOST: crate::socklen_t = 1025;
-pub const M_KEEP: c_int = 4;
 pub const REG_STARTEND: c_int = 0o00004;
 pub const VEOF: usize = 4;
 
@@ -2130,11 +2310,13 @@ pub const SOCK_RAW: c_int = 3;
 pub const SOCK_RDM: c_int = 4;
 pub const SOCK_CLOEXEC: c_int = 0x10000000;
 
-pub const SA_SIGINFO: c_int = 0x0002;
-pub const SA_NOCLDWAIT: c_int = 0x0020;
-pub const SA_NODEFER: c_int = 0x0010;
-pub const SA_RESETHAND: c_int = 0x0004;
 pub const SA_NOCLDSTOP: c_int = 0x0001;
+pub const SA_SIGINFO: c_int = 0x0002;
+pub const SA_RESETHAND: c_int = 0x0004;
+pub const SA_ONSTACK: c_int = 0x0008;
+pub const SA_NODEFER: c_int = 0x0010;
+pub const SA_NOCLDWAIT: c_int = 0x0020;
+pub const SA_MASK: c_int = 0x00FF;
 
 pub const SIGTTIN: c_int = 26;
 pub const SIGTTOU: c_int = 27;
@@ -2259,39 +2441,6 @@ pub const TCSANOW: c_int = 0x0001;
 pub const TCSADRAIN: c_int = 0x0002;
 pub const TCSAFLUSH: c_int = 0x0004;
 
-pub const HW_MACHINE: c_int = 1;
-pub const HW_MODEL: c_int = 2;
-pub const HW_NCPU: c_int = 3;
-pub const HW_BYTEORDER: c_int = 4;
-pub const HW_PHYSMEM: c_int = 5;
-pub const HW_USERMEM: c_int = 6;
-pub const HW_PAGESIZE: c_int = 7;
-pub const HW_DISKNAMES: c_int = 8;
-pub const HW_IOSTATS: c_int = 9;
-pub const HW_MACHINE_ARCH: c_int = 10;
-pub const HW_ALIGNBYTES: c_int = 11;
-pub const HW_CNMAGIC: c_int = 12;
-pub const HW_PHYSMEM64: c_int = 13;
-pub const HW_USERMEM64: c_int = 14;
-pub const HW_IOSTATNAMES: c_int = 15;
-pub const HW_MAXID: c_int = 15;
-
-pub const CTL_UNSPEC: c_int = 0;
-pub const CTL_KERN: c_int = 1;
-pub const CTL_VM: c_int = 2;
-pub const CTL_VFS: c_int = 3;
-pub const CTL_NET: c_int = 4;
-pub const CTL_DEBUG: c_int = 5;
-pub const CTL_HW: c_int = 6;
-pub const CTL_MACHDEP: c_int = 7;
-pub const CTL_USER: c_int = 8;
-pub const CTL_QNX: c_int = 9;
-pub const CTL_PROC: c_int = 10;
-pub const CTL_VENDOR: c_int = 11;
-pub const CTL_EMUL: c_int = 12;
-pub const CTL_SECURITY: c_int = 13;
-pub const CTL_MAXID: c_int = 14;
-
 pub const DAY_1: crate::nl_item = 8;
 pub const DAY_2: crate::nl_item = 9;
 pub const DAY_3: crate::nl_item = 10;
@@ -2334,49 +2483,16 @@ pub const ABMON_10: crate::nl_item = 43;
 pub const ABMON_11: crate::nl_item = 44;
 pub const ABMON_12: crate::nl_item = 45;
 
-pub const AF_ARP: c_int = 28;
-pub const AF_CCITT: c_int = 10;
-pub const AF_CHAOS: c_int = 5;
-pub const AF_CNT: c_int = 21;
-pub const AF_COIP: c_int = 20;
-pub const AF_DATAKIT: c_int = 9;
-pub const AF_DECnet: c_int = 12;
-pub const AF_DLI: c_int = 13;
-pub const AF_E164: c_int = 26;
-pub const AF_ECMA: c_int = 8;
-pub const AF_HYLINK: c_int = 15;
-pub const AF_IEEE80211: c_int = 32;
-pub const AF_IMPLINK: c_int = 3;
-pub const AF_ISO: c_int = 7;
-pub const AF_LAT: c_int = 14;
-pub const AF_LINK: c_int = 18;
-pub const AF_NATM: c_int = 27;
-pub const AF_NS: c_int = 6;
-pub const AF_OSI: c_int = 7;
-pub const AF_PUP: c_int = 4;
 pub const ALT_DIGITS: crate::nl_item = 50;
 pub const AM_STR: crate::nl_item = 6;
 pub const B76800: crate::speed_t = 76800;
 
-pub const BIOCFLUSH: c_int = 17000;
-pub const BIOCGBLEN: c_int = 1074020966;
-pub const BIOCGDLT: c_int = 1074020970;
 pub const BIOCGDLTLIST: c_int = -1072676233;
-pub const BIOCGETIF: c_int = 1083196011;
 pub const BIOCGHDRCMPLT: c_int = 1074020980;
-pub const BIOCGRTIMEOUT: c_int = 1074807406;
 pub const BIOCGSEESENT: c_int = 1074020984;
-pub const BIOCGSTATS: c_int = 1082147439;
-pub const BIOCIMMEDIATE: c_int = -2147204496;
-pub const BIOCPROMISC: c_int = 17001;
-pub const BIOCSBLEN: c_int = -1073462682;
 pub const BIOCSDLT: c_int = -2147204490;
-pub const BIOCSETF: c_int = -2146418073;
-pub const BIOCSETIF: c_int = -2138029460;
 pub const BIOCSHDRCMPLT: c_int = -2147204491;
-pub const BIOCSRTIMEOUT: c_int = -2146418067;
 pub const BIOCSSEESENT: c_int = -2147204487;
-pub const BIOCVERSION: c_int = 1074020977;
 
 pub const BPF_ALIGNMENT: usize = mem::size_of::<c_long>();
 pub const CHAR_BIT: usize = 8;
@@ -2405,70 +2521,6 @@ pub const YESEXPR: crate::nl_item = 53;
 pub const NOEXPR: crate::nl_item = 54;
 pub const F_GETOWN: c_int = 35;
 
-pub const FIONBIO: c_int = -2147195266;
-pub const FIOASYNC: c_int = -2147195267;
-pub const FIOCLEX: c_int = 26113;
-pub const FIOGETOWN: c_int = 1074030203;
-pub const FIONCLEX: c_int = 26114;
-pub const FIONREAD: c_int = 1074030207;
-pub const FIONSPACE: c_int = 1074030200;
-pub const FIONWRITE: c_int = 1074030201;
-pub const FIOSETOWN: c_int = -2147195268;
-
-pub const F_SETOWN: c_int = 36;
-pub const IFF_ACCEPTRTADV: c_int = 0x40000000;
-pub const IFF_IP6FORWARDING: c_int = 0x20000000;
-pub const IFF_LINK0: c_int = 0x00001000;
-pub const IFF_LINK1: c_int = 0x00002000;
-pub const IFF_LINK2: c_int = 0x00004000;
-pub const IFF_OACTIVE: c_int = 0x00000400;
-pub const IFF_SHIM: c_int = 0x80000000;
-pub const IFF_SIMPLEX: c_int = 0x00000800;
-pub const IHFLOW: tcflag_t = 0x00000001;
-pub const IIDLE: tcflag_t = 0x00000008;
-pub const IP_RECVDSTADDR: c_int = 7;
-pub const IP_RECVIF: c_int = 20;
-pub const IPTOS_ECN_NOTECT: u8 = 0x00;
-pub const IUCLC: tcflag_t = 0x00000200;
-pub const IUTF8: tcflag_t = 0x0004000;
-
-pub const KERN_ARGMAX: c_int = 8;
-pub const KERN_ARND: c_int = 81;
-pub const KERN_BOOTTIME: c_int = 21;
-pub const KERN_CLOCKRATE: c_int = 12;
-pub const KERN_FILE: c_int = 15;
-pub const KERN_HOSTID: c_int = 11;
-pub const KERN_HOSTNAME: c_int = 10;
-pub const KERN_IOV_MAX: c_int = 38;
-pub const KERN_JOB_CONTROL: c_int = 19;
-pub const KERN_LOGSIGEXIT: c_int = 46;
-pub const KERN_MAXFILES: c_int = 7;
-pub const KERN_MAXID: c_int = 83;
-pub const KERN_MAXPROC: c_int = 6;
-pub const KERN_MAXVNODES: c_int = 5;
-pub const KERN_NGROUPS: c_int = 18;
-pub const KERN_OSRELEASE: c_int = 2;
-pub const KERN_OSREV: c_int = 3;
-pub const KERN_OSTYPE: c_int = 1;
-pub const KERN_POSIX1: c_int = 17;
-pub const KERN_PROC: c_int = 14;
-pub const KERN_PROC_ALL: c_int = 0;
-pub const KERN_PROC_ARGS: c_int = 48;
-pub const KERN_PROC_ENV: c_int = 3;
-pub const KERN_PROC_GID: c_int = 7;
-pub const KERN_PROC_PGRP: c_int = 2;
-pub const KERN_PROC_PID: c_int = 1;
-pub const KERN_PROC_RGID: c_int = 8;
-pub const KERN_PROC_RUID: c_int = 6;
-pub const KERN_PROC_SESSION: c_int = 3;
-pub const KERN_PROC_TTY: c_int = 4;
-pub const KERN_PROC_UID: c_int = 5;
-pub const KERN_PROF: c_int = 16;
-pub const KERN_SAVED_IDS: c_int = 20;
-pub const KERN_SECURELVL: c_int = 9;
-pub const KERN_VERSION: c_int = 4;
-pub const KERN_VNODE: c_int = 13;
-
 pub const LC_ALL: c_int = 63;
 pub const LC_COLLATE: c_int = 1;
 pub const LC_CTYPE: c_int = 2;
@@ -2477,15 +2529,7 @@ pub const LC_MONETARY: c_int = 4;
 pub const LC_NUMERIC: c_int = 8;
 pub const LC_TIME: c_int = 16;
 
-pub const LOCAL_CONNWAIT: c_int = 0x0002;
-pub const LOCAL_CREDS: c_int = 0x0001;
-pub const LOCAL_PEEREID: c_int = 0x0003;
-
 pub const MAP_STACK: c_int = 0x00001000;
-pub const MNT_NOEXEC: c_int = 0x02;
-pub const MNT_NOSUID: c_int = 0x04;
-pub const MNT_RDONLY: c_int = 0x01;
-
 pub const MSG_NOTIFICATION: c_int = 0x0400;
 
 pub const NET_RT_DUMP: c_int = 1;
@@ -2495,26 +2539,7 @@ pub const NI_NUMERICSCOPE: c_int = 0x00000040;
 pub const OHFLOW: tcflag_t = 0x00000002;
 pub const P_ALL: idtype_t = 0;
 pub const PARSTK: tcflag_t = 0x00000004;
-pub const PF_ARP: c_int = 28;
-pub const PF_CCITT: c_int = 10;
-pub const PF_CHAOS: c_int = 5;
-pub const PF_CNT: c_int = 21;
-pub const PF_COIP: c_int = 20;
-pub const PF_DATAKIT: c_int = 9;
-pub const PF_DECnet: c_int = 12;
-pub const PF_DLI: c_int = 13;
-pub const PF_ECMA: c_int = 8;
-pub const PF_HYLINK: c_int = 15;
-pub const PF_IMPLINK: c_int = 3;
-pub const PF_ISO: c_int = 7;
-pub const PF_LAT: c_int = 14;
-pub const PF_LINK: c_int = 18;
-pub const PF_NATM: c_int = 27;
-pub const PF_OSI: c_int = 7;
-pub const PF_PIP: c_int = 25;
-pub const PF_PUP: c_int = 4;
-pub const PF_RTIP: c_int = 22;
-pub const PF_XTP: c_int = 19;
+
 pub const PM_STR: crate::nl_item = 7;
 pub const POSIX_MADV_DONTNEED: c_int = 4;
 pub const POSIX_MADV_NORMAL: c_int = 0;
@@ -2527,10 +2552,7 @@ pub const P_PID: idtype_t = 1;
 pub const PRIO_PGRP: c_int = 1;
 pub const PRIO_PROCESS: c_int = 0;
 pub const PRIO_USER: c_int = 2;
-pub const pseudo_AF_HDRCMPLT: c_int = 30;
-pub const pseudo_AF_PIP: c_int = 25;
-pub const pseudo_AF_RTIP: c_int = 22;
-pub const pseudo_AF_XTP: c_int = 19;
+
 pub const REG_ASSERT: c_int = 15;
 pub const REG_ATOI: c_int = 255;
 pub const REG_BACKR: c_int = 0x400;
@@ -2573,12 +2595,7 @@ pub const SIGEV_NONE: c_int = 0;
 pub const SIGEV_SIGNAL: c_int = 129;
 pub const SIGEV_THREAD: c_int = 135;
 pub const SIOCGIFADDR: c_int = -1064277727;
-pub const SO_FIB: c_int = 0x100a;
-pub const SO_OVERFLOWED: c_int = 0x1009;
-pub const SO_SETFIB: c_int = 0x100a;
-pub const SO_TXPRIO: c_int = 0x100b;
-pub const SO_USELOOPBACK: c_int = 0x0040;
-pub const SO_VLANPRIO: c_int = 0x100c;
+
 pub const _SS_ALIGNSIZE: usize = mem::size_of::<i64>();
 pub const _SS_MAXSIZE: usize = 128;
 pub const _SS_PAD1SIZE: usize = _SS_ALIGNSIZE - 2;
@@ -2628,29 +2645,6 @@ pub const TIOCSTI: c_int = -2147388302;
 pub const TIOCSTOP: c_int = 29807;
 pub const TIOCSWINSZ: c_int = -2146929561;
 
-pub const USER_CS_PATH: c_int = 1;
-pub const USER_BC_BASE_MAX: c_int = 2;
-pub const USER_BC_DIM_MAX: c_int = 3;
-pub const USER_BC_SCALE_MAX: c_int = 4;
-pub const USER_BC_STRING_MAX: c_int = 5;
-pub const USER_COLL_WEIGHTS_MAX: c_int = 6;
-pub const USER_EXPR_NEST_MAX: c_int = 7;
-pub const USER_LINE_MAX: c_int = 8;
-pub const USER_RE_DUP_MAX: c_int = 9;
-pub const USER_POSIX2_VERSION: c_int = 10;
-pub const USER_POSIX2_C_BIND: c_int = 11;
-pub const USER_POSIX2_C_DEV: c_int = 12;
-pub const USER_POSIX2_CHAR_TERM: c_int = 13;
-pub const USER_POSIX2_FORT_DEV: c_int = 14;
-pub const USER_POSIX2_FORT_RUN: c_int = 15;
-pub const USER_POSIX2_LOCALEDEF: c_int = 16;
-pub const USER_POSIX2_SW_DEV: c_int = 17;
-pub const USER_POSIX2_UPE: c_int = 18;
-pub const USER_STREAM_MAX: c_int = 19;
-pub const USER_TZNAME_MAX: c_int = 20;
-pub const USER_ATEXIT_MAX: c_int = 21;
-pub const USER_MAXID: c_int = 22;
-
 pub const VDOWN: usize = 31;
 pub const VINS: usize = 32;
 pub const VDEL: usize = 33;
@@ -2670,42 +2664,6 @@ pub const VLEFT: usize = 28;
 pub const VRIGHT: usize = 29;
 pub const VUP: usize = 30;
 pub const XCASE: tcflag_t = 0x00000004;
-
-pub const PTHREAD_BARRIER_SERIAL_THREAD: c_int = -1;
-pub const PTHREAD_CREATE_JOINABLE: c_int = 0x00;
-pub const PTHREAD_CREATE_DETACHED: c_int = 0x01;
-
-pub const PTHREAD_MUTEX_ERRORCHECK: c_int = 1;
-pub const PTHREAD_MUTEX_RECURSIVE: c_int = 2;
-pub const PTHREAD_MUTEX_NORMAL: c_int = 3;
-pub const PTHREAD_STACK_MIN: size_t = 256;
-pub const PTHREAD_MUTEX_DEFAULT: c_int = 0;
-pub const PTHREAD_MUTEX_STALLED: c_int = 0x00;
-pub const PTHREAD_MUTEX_ROBUST: c_int = 0x10;
-pub const PTHREAD_PROCESS_PRIVATE: c_int = 0x00;
-pub const PTHREAD_PROCESS_SHARED: c_int = 0x01;
-
-pub const PTHREAD_KEYS_MAX: usize = 128;
-
-pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
-    __u: 0x80000000,
-    __owner: 0xffffffff,
-};
-pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
-    __u: CLOCK_REALTIME as u32,
-    __owner: 0xfffffffb,
-};
-pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
-    __active: 0,
-    __blockedwriters: 0,
-    __blockedreaders: 0,
-    __heavy: 0,
-    __lock: PTHREAD_MUTEX_INITIALIZER,
-    __rcond: PTHREAD_COND_INITIALIZER,
-    __wcond: PTHREAD_COND_INITIALIZER,
-    __owner: -2i32 as c_uint,
-    __spare: 0,
-};
 
 const_fn! {
     {const} fn _CMSG_ALIGN(len: usize) -> usize {
@@ -2859,7 +2817,7 @@ safe_f! {
 // functions are provided by libregex.
 // In QNX <=7.0, libregex functions were included in libc itself.
 #[link(name = "socket")]
-#[cfg_attr(not(target_env = "nto70"), link(name = "regex"))]
+// #[cfg_attr(not(link(name = "regex")))]
 extern "C" {
     pub fn sem_destroy(sem: *mut sem_t) -> c_int;
     pub fn sem_init(sem: *mut sem_t, pshared: c_int, value: c_uint) -> c_int;
@@ -2913,7 +2871,6 @@ extern "C" {
         val: *mut c_int,
     ) -> c_int;
     pub fn pthread_rwlockattr_setpshared(attr: *mut pthread_rwlockattr_t, val: c_int) -> c_int;
-    pub fn ptsname_r(fd: c_int, buf: *mut c_char, buflen: size_t) -> *mut c_char;
     pub fn clearenv() -> c_int;
     pub fn waitid(
         idtype: idtype_t,
@@ -3256,10 +3213,6 @@ extern "C" {
     ) -> c_int;
     pub fn popen(command: *const c_char, mode: *const c_char) -> *mut crate::FILE;
     pub fn faccessat(dirfd: c_int, pathname: *const c_char, mode: c_int, flags: c_int) -> c_int;
-    pub fn inotify_rm_watch(fd: c_int, wd: c_int) -> c_int;
-    pub fn inotify_init() -> c_int;
-    pub fn inotify_add_watch(fd: c_int, path: *const c_char, mask: u32) -> c_int;
-
     pub fn gettid() -> crate::pid_t;
 
     pub fn pthread_getcpuclockid(thread: crate::pthread_t, clk_id: *mut crate::clockid_t) -> c_int;
@@ -3274,20 +3227,6 @@ extern "C" {
         flags: c_int,
     ) -> c_int;
 
-    pub fn sendmmsg(
-        sockfd: c_int,
-        msgvec: *mut crate::mmsghdr,
-        vlen: c_uint,
-        flags: c_uint,
-    ) -> c_int;
-    pub fn recvmmsg(
-        sockfd: c_int,
-        msgvec: *mut crate::mmsghdr,
-        vlen: c_uint,
-        flags: c_uint,
-        timeout: *mut crate::timespec,
-    ) -> c_int;
-
     pub fn mallopt(param: c_int, value: i64) -> c_int;
     pub fn gettimeofday(tp: *mut crate::timeval, tz: *mut c_void) -> c_int;
 
@@ -3295,12 +3234,7 @@ extern "C" {
     pub fn ioctl(fd: c_int, request: c_int, ...) -> c_int;
 
     pub fn mallinfo() -> crate::mallinfo;
-    pub fn getpwent_r(
-        pwd: *mut crate::passwd,
-        buf: *mut c_char,
-        __bufsize: c_int,
-        __result: *mut *mut crate::passwd,
-    ) -> c_int;
+
     pub fn pthread_getname_np(thread: crate::pthread_t, name: *mut c_char, len: c_int) -> c_int;
     pub fn pthread_setname_np(thread: crate::pthread_t, name: *const c_char) -> c_int;
 
@@ -3321,20 +3255,6 @@ extern "C" {
         __list: *const *mut aiocb,
         __nent: c_int,
         __sig: *mut sigevent,
-    ) -> c_int;
-
-    pub fn dl_iterate_phdr(
-        callback: Option<
-            unsafe extern "C" fn(
-                // The original .h file declares this as *const, but for consistency with other platforms,
-                // changing this to *mut to make it easier to use.
-                // Maybe in v0.3 all platforms should use this as a *const.
-                info: *mut dl_phdr_info,
-                size: size_t,
-                data: *mut c_void,
-            ) -> c_int,
-        >,
-        data: *mut c_void,
     ) -> c_int;
 
     pub fn memset_s(s: *mut c_void, smax: size_t, c: c_int, n: size_t) -> c_int;
@@ -3473,6 +3393,557 @@ impl siginfo_t {
     }
 }
 
+extern "C" {
+    pub fn ChannelCreate(__flags: c_uint) -> c_int;
+    pub fn ChannelCreate_r(__flags: c_uint) -> c_int;
+    pub fn ChannelCreatePulsePool(__flags: c_uint, __config: *const nto_channel_config) -> c_int;
+
+    pub fn ChannelDestroy(__chid: c_int) -> c_int;
+    pub fn ChannelDestroy_r(__chid: c_int) -> c_int;
+    pub fn ConnectAttach(
+        __nd: u32,
+        __pid: crate::pid_t,
+        __chid: c_int,
+        __index: c_uint,
+        __flags: c_int,
+    ) -> c_int;
+    pub fn ConnectAttach_r(
+        __nd: u32,
+        __pid: crate::pid_t,
+        __chid: c_int,
+        __index: c_uint,
+        __flags: c_int,
+    ) -> c_int;
+
+    // TODO: The following function uses a structure defined in a header file
+    //       which doesn't appear as part of the default headers found in a
+    //       standard installation of Neutrino 7.1 SDP.  Commented out for now.
+    //pub fn ConnectAttachExt(
+    //    __nd: u32,
+    //    __pid: crate::pid_t,
+    //    __chid: c_int,
+    //    __index: c_uint,
+    //    __flags: c_int,
+    //    __cd: *mut _asyncmsg_connection_descriptor,
+    //) -> c_int;
+    pub fn ConnectDetach(__coid: c_int) -> c_int;
+    pub fn ConnectDetach_r(__coid: c_int) -> c_int;
+    pub fn ConnectServerInfo(__pid: crate::pid_t, __coid: c_int, __info: *mut _msg_info64)
+        -> c_int;
+    pub fn ConnectServerInfo_r(
+        __pid: crate::pid_t,
+        __coid: c_int,
+        __info: *mut _msg_info64,
+    ) -> c_int;
+    pub fn ConnectClientInfoExtraArgs(
+        __scoid: c_int,
+        __info_pp: *mut _client_info,
+        __ngroups: c_int,
+        __abilities: *mut _client_able,
+        __nable: c_int,
+        __type_id: *mut c_uint,
+    ) -> c_int;
+    pub fn ConnectClientInfoExtraArgs_r(
+        __scoid: c_int,
+        __info_pp: *mut _client_info,
+        __ngroups: c_int,
+        __abilities: *mut _client_able,
+        __nable: c_int,
+        __type_id: *mut c_uint,
+    ) -> c_int;
+    pub fn ConnectClientInfo(__scoid: c_int, __info: *mut _client_info, __ngroups: c_int) -> c_int;
+    pub fn ConnectClientInfo_r(
+        __scoid: c_int,
+        __info: *mut _client_info,
+        __ngroups: c_int,
+    ) -> c_int;
+    pub fn ConnectClientInfoExt(
+        __scoid: c_int,
+        __info_pp: *mut *mut _client_info,
+        flags: c_int,
+    ) -> c_int;
+    pub fn ClientInfoExtFree(__info_pp: *mut *mut _client_info) -> c_int;
+    pub fn ConnectClientInfoAble(
+        __scoid: c_int,
+        __info_pp: *mut *mut _client_info,
+        flags: c_int,
+        abilities: *mut _client_able,
+        nable: c_int,
+    ) -> c_int;
+    pub fn ConnectFlags(
+        __pid: crate::pid_t,
+        __coid: c_int,
+        __mask: c_uint,
+        __bits: c_uint,
+    ) -> c_int;
+    pub fn ConnectFlags_r(
+        __pid: crate::pid_t,
+        __coid: c_int,
+        __mask: c_uint,
+        __bits: c_uint,
+    ) -> c_int;
+    pub fn ChannelConnectAttr(
+        __id: c_uint,
+        __old_attr: *mut _channel_connect_attr,
+        __new_attr: *mut _channel_connect_attr,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn MsgSend(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSend_r(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendnc(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendnc_r(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendsv(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendsv_r(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendsvnc(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendsvnc_r(
+        __coid: c_int,
+        __smsg: *const c_void,
+        __sbytes: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendvs(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendvs_r(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendvsnc(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendvsnc_r(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __rmsg: *mut c_void,
+        __rbytes: usize,
+    ) -> c_long;
+    pub fn MsgSendv(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendv_r(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendvnc(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn MsgSendvnc_r(
+        __coid: c_int,
+        __siov: *const crate::iovec,
+        __sparts: usize,
+        __riov: *const crate::iovec,
+        __rparts: usize,
+    ) -> c_long;
+    pub fn SignalKill(
+        __nd: u32,
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __signo: c_int,
+        __code: c_int,
+        __value: c_int,
+    ) -> c_int;
+    pub fn SignalKill_r(
+        __nd: u32,
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __signo: c_int,
+        __code: c_int,
+        __value: c_int,
+    ) -> c_int;
+    pub fn SignalKillSigval(
+        __nd: u32,
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __signo: c_int,
+        __code: c_int,
+        __value: *const crate::sigval,
+    ) -> c_int;
+    pub fn SignalKillSigval_r(
+        __nd: u32,
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __signo: c_int,
+        __code: c_int,
+        __value: *const crate::sigval,
+    ) -> c_int;
+    pub fn SignalReturn(__info: *mut _sighandler_info) -> c_int;
+    pub fn SignalAction(
+        __pid: crate::pid_t,
+        __sigstub: unsafe extern "C" fn(),
+        __signo: c_int,
+        __act: *const crate::sigaction,
+        __oact: *mut crate::sigaction,
+    ) -> c_int;
+    pub fn SignalAction_r(
+        __pid: crate::pid_t,
+        __sigstub: unsafe extern "C" fn(),
+        __signo: c_int,
+        __act: *const crate::sigaction,
+        __oact: *mut crate::sigaction,
+    ) -> c_int;
+    pub fn SignalProcmask(
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __how: c_int,
+        __set: *const crate::sigset_t,
+        __oldset: *mut crate::sigset_t,
+    ) -> c_int;
+    pub fn SignalProcmask_r(
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __how: c_int,
+        __set: *const crate::sigset_t,
+        __oldset: *mut crate::sigset_t,
+    ) -> c_int;
+    pub fn SignalSuspend(__set: *const crate::sigset_t) -> c_int;
+    pub fn SignalSuspend_r(__set: *const crate::sigset_t) -> c_int;
+    pub fn SignalWaitinfo(__set: *const crate::sigset_t, __info: *mut crate::siginfo_t) -> c_int;
+    pub fn SignalWaitinfo_r(__set: *const crate::sigset_t, __info: *mut crate::siginfo_t) -> c_int;
+    pub fn SignalWaitinfoMask(
+        __set: *const crate::sigset_t,
+        __info: *mut crate::siginfo_t,
+        __mask: *const crate::sigset_t,
+    ) -> c_int;
+    pub fn SignalWaitinfoMask_r(
+        __set: *const crate::sigset_t,
+        __info: *mut crate::siginfo_t,
+        __mask: *const crate::sigset_t,
+    ) -> c_int;
+    pub fn ThreadCreate(
+        __pid: crate::pid_t,
+        __func: unsafe extern "C" fn(__arg: *mut c_void) -> *mut c_void,
+        __arg: *mut c_void,
+        __attr: *const crate::_thread_attr,
+    ) -> c_int;
+    pub fn ThreadCreate_r(
+        __pid: crate::pid_t,
+        __func: unsafe extern "C" fn(__arg: *mut c_void) -> *mut c_void,
+        __arg: *mut c_void,
+        __attr: *const crate::_thread_attr,
+    ) -> c_int;
+
+    pub fn ThreadDestroy(__tid: c_int, __priority: c_int, __status: *mut c_void) -> c_int;
+    pub fn ThreadDestroy_r(__tid: c_int, __priority: c_int, __status: *mut c_void) -> c_int;
+    pub fn ThreadDetach(__tid: c_int) -> c_int;
+    pub fn ThreadDetach_r(__tid: c_int) -> c_int;
+    pub fn ThreadJoin(__tid: c_int, __status: *mut *mut c_void) -> c_int;
+    pub fn ThreadJoin_r(__tid: c_int, __status: *mut *mut c_void) -> c_int;
+    pub fn ThreadCancel(__tid: c_int, __canstub: unsafe extern "C" fn()) -> c_int;
+    pub fn ThreadCancel_r(__tid: c_int, __canstub: unsafe extern "C" fn()) -> c_int;
+    pub fn ThreadCtl(__cmd: c_int, __data: *mut c_void) -> c_int;
+    pub fn ThreadCtl_r(__cmd: c_int, __data: *mut c_void) -> c_int;
+    pub fn ThreadCtlExt(
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __cmd: c_int,
+        __data: *mut c_void,
+    ) -> c_int;
+    pub fn ThreadCtlExt_r(
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __cmd: c_int,
+        __data: *mut c_void,
+    ) -> c_int;
+
+    pub fn InterruptHookTrace(
+        __handler: Option<unsafe extern "C" fn(arg1: c_int) -> *const crate::sigevent>,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptHookIdle(
+        __handler: Option<unsafe extern "C" fn(arg1: *mut u64, arg2: *mut qtime_entry)>,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptHookIdle2(
+        __handler: Option<
+            unsafe extern "C" fn(arg1: c_uint, arg2: *mut syspage_entry, arg3: *mut _idle_hook),
+        >,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptHookOverdriveEvent(__event: *const crate::sigevent, __flags: c_uint) -> c_int;
+    pub fn InterruptAttachEvent(
+        __intr: c_int,
+        __event: *const crate::sigevent,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptAttachEvent_r(
+        __intr: c_int,
+        __event: *const crate::sigevent,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptAttach(
+        __intr: c_int,
+        __handler: Option<
+            unsafe extern "C" fn(__area: *mut c_void, __id: c_int) -> *const crate::sigevent,
+        >,
+        __area: *const c_void,
+        __size: c_int,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptAttach_r(
+        __intr: c_int,
+        __handler: Option<
+            unsafe extern "C" fn(__area: *mut c_void, __id: c_int) -> *const crate::sigevent,
+        >,
+        __area: *const c_void,
+        __size: c_int,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptAttachArray(
+        __intr: c_int,
+        __handler: Option<
+            unsafe extern "C" fn(__area: *mut c_void, __id: c_int) -> *const *const crate::sigevent,
+        >,
+        __area: *const c_void,
+        __size: c_int,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptAttachArray_r(
+        __intr: c_int,
+        __handler: Option<
+            unsafe extern "C" fn(__area: *mut c_void, __id: c_int) -> *const *const crate::sigevent,
+        >,
+        __area: *const c_void,
+        __size: c_int,
+        __flags: c_uint,
+    ) -> c_int;
+    pub fn InterruptDetach(__id: c_int) -> c_int;
+    pub fn InterruptDetach_r(__id: c_int) -> c_int;
+    pub fn InterruptWait(__flags: c_int, __timeout: *const u64) -> c_int;
+    pub fn InterruptWait_r(__flags: c_int, __timeout: *const u64) -> c_int;
+
+    pub fn SchedGet(__pid: crate::pid_t, __tid: c_int, __param: *mut crate::sched_param) -> c_int;
+    pub fn SchedGet_r(__pid: crate::pid_t, __tid: c_int, __param: *mut crate::sched_param)
+        -> c_int;
+    pub fn SchedGetCpuNum() -> c_uint;
+    pub fn SchedSet(
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __algorithm: c_int,
+        __param: *const crate::sched_param,
+    ) -> c_int;
+    pub fn SchedSet_r(
+        __pid: crate::pid_t,
+        __tid: c_int,
+        __algorithm: c_int,
+        __param: *const crate::sched_param,
+    ) -> c_int;
+    pub fn SchedInfo(
+        __pid: crate::pid_t,
+        __algorithm: c_int,
+        __info: *mut crate::_sched_info,
+    ) -> c_int;
+    pub fn SchedInfo_r(
+        __pid: crate::pid_t,
+        __algorithm: c_int,
+        __info: *mut crate::_sched_info,
+    ) -> c_int;
+    pub fn SchedYield() -> c_int;
+    pub fn SchedYield_r() -> c_int;
+    pub fn SchedCtl(__cmd: c_int, __data: *mut c_void, __length: usize) -> c_int;
+    pub fn SchedCtl_r(__cmd: c_int, __data: *mut c_void, __length: usize) -> c_int;
+    pub fn SchedJobCreate(__job: *mut nto_job_t) -> c_int;
+    pub fn SchedJobCreate_r(__job: *mut nto_job_t) -> c_int;
+    pub fn SchedJobDestroy(__job: *mut nto_job_t) -> c_int;
+    pub fn SchedJobDestroy_r(__job: *mut nto_job_t) -> c_int;
+
+    pub fn TimerCreate(__id: crate::clockid_t, __notify: *const crate::sigevent) -> c_int;
+    pub fn TimerCreate_r(__id: crate::clockid_t, __notify: *const crate::sigevent) -> c_int;
+    pub fn TimerDestroy(__id: crate::timer_t) -> c_int;
+    pub fn TimerDestroy_r(__id: crate::timer_t) -> c_int;
+    pub fn TimerSettime(
+        __id: crate::timer_t,
+        __flags: c_int,
+        __itime: *const crate::_itimer,
+        __oitime: *mut crate::_itimer,
+    ) -> c_int;
+    pub fn TimerSettime_r(
+        __id: crate::timer_t,
+        __flags: c_int,
+        __itime: *const crate::_itimer,
+        __oitime: *mut crate::_itimer,
+    ) -> c_int;
+    pub fn TimerInfo(
+        __pid: crate::pid_t,
+        __id: crate::timer_t,
+        __flags: c_int,
+        __info: *mut crate::_timer_info,
+    ) -> c_int;
+    pub fn TimerInfo_r(
+        __pid: crate::pid_t,
+        __id: crate::timer_t,
+        __flags: c_int,
+        __info: *mut crate::_timer_info,
+    ) -> c_int;
+    pub fn TimerAlarm(
+        __id: crate::clockid_t,
+        __itime: *const crate::_itimer,
+        __otime: *mut crate::_itimer,
+    ) -> c_int;
+    pub fn TimerAlarm_r(
+        __id: crate::clockid_t,
+        __itime: *const crate::_itimer,
+        __otime: *mut crate::_itimer,
+    ) -> c_int;
+
+    pub fn SyncTypeCreate(__type: c_uint, __sync: *mut sync_t, __attr: *const _sync_attr) -> c_int;
+    pub fn SyncTypeCreate_r(
+        __type: c_uint,
+        __sync: *mut crate::sync_t,
+        __attr: *const crate::_sync_attr,
+    ) -> c_int;
+    pub fn SyncDestroy(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncDestroy_r(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncCtl(__cmd: c_int, __sync: *mut crate::sync_t, __data: *mut c_void) -> c_int;
+    pub fn SyncCtl_r(__cmd: c_int, __sync: *mut crate::sync_t, __data: *mut c_void) -> c_int;
+    pub fn SyncMutexEvent(__sync: *mut crate::sync_t, event: *const crate::sigevent) -> c_int;
+    pub fn SyncMutexEvent_r(__sync: *mut crate::sync_t, event: *const crate::sigevent) -> c_int;
+    pub fn SyncMutexLock(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncMutexLock_r(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncMutexUnlock(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncMutexUnlock_r(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncCondvarWait(__sync: *mut crate::sync_t, __mutex: *mut crate::sync_t) -> c_int;
+    pub fn SyncCondvarWait_r(__sync: *mut crate::sync_t, __mutex: *mut crate::sync_t) -> c_int;
+    pub fn SyncCondvarSignal(__sync: *mut crate::sync_t, __all: c_int) -> c_int;
+    pub fn SyncCondvarSignal_r(__sync: *mut crate::sync_t, __all: c_int) -> c_int;
+    pub fn SyncSemPost(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncSemPost_r(__sync: *mut crate::sync_t) -> c_int;
+    pub fn SyncSemWait(__sync: *mut crate::sync_t, __tryto: c_int) -> c_int;
+    pub fn SyncSemWait_r(__sync: *mut crate::sync_t, __tryto: c_int) -> c_int;
+
+    pub fn dl_iterate_phdr(
+        callback: Option<
+            unsafe extern "C" fn(
+                // The original .h file declares this as *const, but for consistency with other platforms,
+                // changing this to *mut to make it easier to use.
+                // Maybe in v0.3 all platforms should use this as a *const.
+                info: *mut dl_phdr_info,
+                size: size_t,
+                data: *mut c_void,
+            ) -> c_int,
+        >,
+        data: *mut c_void,
+    ) -> c_int;
+
+    pub fn ClockTime(__id: crate::clockid_t, _new: *const u64, __old: *mut u64) -> c_int;
+    pub fn ClockTime_r(__id: crate::clockid_t, _new: *const u64, __old: *mut u64) -> c_int;
+    pub fn ClockAdjust(
+        __id: crate::clockid_t,
+        _new: *const crate::_clockadjust,
+        __old: *mut crate::_clockadjust,
+    ) -> c_int;
+    pub fn ClockAdjust_r(
+        __id: crate::clockid_t,
+        _new: *const crate::_clockadjust,
+        __old: *mut crate::_clockadjust,
+    ) -> c_int;
+    pub fn ClockPeriod(
+        __id: crate::clockid_t,
+        _new: *const crate::_clockperiod,
+        __old: *mut crate::_clockperiod,
+        __reserved: c_int,
+    ) -> c_int;
+    pub fn ClockPeriod_r(
+        __id: crate::clockid_t,
+        _new: *const crate::_clockperiod,
+        __old: *mut crate::_clockperiod,
+        __reserved: c_int,
+    ) -> c_int;
+    pub fn ClockId(__pid: crate::pid_t, __tid: c_int) -> c_int;
+    pub fn ClockId_r(__pid: crate::pid_t, __tid: c_int) -> c_int;
+
+    //
+    //TODO: The following commented out functions are implemented in assembly.
+    //      We can implmement them either via a C stub or rust's inline assembly.
+    //
+    //pub fn InterruptEnable();
+    //pub fn InterruptDisable();
+    pub fn InterruptMask(__intr: c_int, __id: c_int) -> c_int;
+    pub fn InterruptUnmask(__intr: c_int, __id: c_int) -> c_int;
+    //pub fn InterruptLock(__spin: *mut intrspin);
+    //pub fn InterruptUnlock(__spin: *mut intrspin);
+    //pub fn InterruptStatus() -> c_uint;
+}
+
+cfg_if! {
+    if #[cfg(target_env = "nto80")]{
+        mod nto80;
+        pub use self::nto80::*;
+    }
+    else if #[cfg(any(target_env = "nto71", target_env = "nto70"))]{
+        mod nto7071;
+        pub use self::nto7071::*;
+    }
+    else {
+        // Unknown env
+    }
+}
+
 cfg_if! {
     if #[cfg(target_arch = "x86_64")] {
         mod x86_64;
@@ -3484,6 +3955,3 @@ cfg_if! {
         panic!("Unsupported arch");
     }
 }
-
-mod neutrino;
-pub use self::neutrino::*;

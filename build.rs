@@ -39,7 +39,8 @@ const CHECK_CFG_EXTRA: &'static [(&'static str, &'static [&'static str])] = &[
 fn main() {
     // Avoid unnecessary re-building.
     println!("cargo:rerun-if-changed=build.rs");
-
+    println!("cargo:rustc-check-cfg=cfg(target_env, values(\"nto80\"))");
+    println!("cargo:rustc-check-cfg=cfg(target_env, values(\"nto71_iosock\"))");
     let (rustc_minor_ver, _is_nightly) = rustc_minor_nightly();
     let rustc_dep_of_std = env::var("CARGO_FEATURE_RUSTC_DEP_OF_STD").is_ok();
     let libc_ci = env::var("LIBC_CI").is_ok();
